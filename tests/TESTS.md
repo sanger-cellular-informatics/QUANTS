@@ -1,20 +1,29 @@
 # End-to-end pipeline tests
 
-The `test/` directory contains end-to-end tests for the quants pipeline using the nf-test framework.
+The `tests/` directory contains end-to-end tests for the QUANTS pipeline using the nf-test framework.
 
 ## End-to-end datasets and files
 
 Having retrieved data and placed it in the ref and sample-data folders, tests can be run with the following command:
 ```bash
-NXF_VER=23.10.0 nf-test test --profile <docker|singularity>
+NXF_VER=25.10.4 nf-test test --profile <docker|singularity>
 ```
 
 If you are running individual tests, you can run them with the following command:
 ```bash
-NXF_VER=23.10.0 nf-test test tests/test[n].main.nf.test --profile <docker|singularity>
+NXF_VER=25.10.4 nf-test test tests/test[n].main.nf.test --profile <docker|singularity>
 ```
 
-Note that the `NXF_VER` is expected to changed in future releases of the pipeline, and should be updated to the version of Nextflow that is being used to run the tests.
+Nextflow 25.10.4 or later is required; the pipeline configuration stops execution with older versions.
+
+On the Sanger farm, load the Singularity and Nextflow modules before running nf-test. The farm module is named `nf-test/v0.9.2`; loading it may also load a newer generic Nextflow module, so load `HGI/common/nextflow/25.10.4` afterwards:
+```bash
+module load ISG/singularity/3.11.4
+module load nf-test/v0.9.2
+module load HGI/common/nextflow/25.10.4
+export NXF_SINGULARITY_CACHEDIR="/lustre/scratch127/mave/sge_analysis/team229/singularity"
+nf-test test modules subworkflows tests --profile sanger,singularity
+```
 
 Make sure you download/clone `quants-data` from this repository `https://gitlab.internal.sanger.ac.uk/sci/quants-data` into your chosen directory on your local machine. Before running the end-to-end tests copy the contents `ref/` and `sample-data/` directories from your local `quants-data` repository into `tests/ref` and `tests/sample-data` respectively, overwriting existing contents.
 
@@ -79,12 +88,12 @@ Individual module tests are located in each module's tests directory, i.e. `modu
 
 Module tests should be run locally when developing or modifying a module to confirm that the module behaves as expected. Module tests can be run with the following command:
 ```bash
-nf-test test modules --profile <docker|singularity>
+NXF_VER=25.10.4 nf-test test modules --profile <docker|singularity>
 ```
 
 Running individual module tests can be done with the following command:
 ```bash
-nf-test test modules/<local|nf-core>/<module-name>/tests/main.nf.test --profile <docker|singularity>
+NXF_VER=25.10.4 nf-test test modules/<local|nf-core>/<module-name>/tests/main.nf.test --profile <docker|singularity>
 ```
 
 # Subworkflow tests
@@ -93,12 +102,12 @@ Tests for local subworkflow are located in each subworkflows' tests directory, i
 
 Subworkflow tests should be run locally when developing or modifying a subworkflow to confirm that the subworkflow behaves as expected. Subworkflow tests can be run with the following command:
 ```bash
-nf-test test subworkflows --profile <docker|singularity>
+NXF_VER=25.10.4 nf-test test subworkflows --profile <docker|singularity>
 ```
 
 Running individual subworkflow tests can be done with the following command:
 ```bash
-nf-test test subworkflows/local/<subworkflow-name>/tests/main.nf.test --profile <docker|singularity>
+NXF_VER=25.10.4 nf-test test subworkflows/local/<subworkflow-name>/tests/main.nf.test --profile <docker|singularity>
 ```
 
 # Overview of the QUANTS tests: test types, directories and purpose

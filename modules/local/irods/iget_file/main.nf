@@ -18,7 +18,7 @@ process IRODS_IGET_FILE {
         """
         set -euo pipefail
 
-        command -v iget >/dev/null 2>&1 || { echo "ERROR: iget not found (iRODS iCommands required)"; }
+        command -v iget >/dev/null 2>&1 || { echo "ERROR: iget not found (iRODS iCommands required)"; exit 1; }
 
         echo "IRODS path: ${irods_path}"
         echo "Downloading to: ${local_filename}"

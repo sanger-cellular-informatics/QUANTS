@@ -3,3 +3,5 @@
 e3c702dee536c45e8eeae36996fcd207  tests/ref/3.tsv
 ac0899f173efe28a5b4b9b161f232d93  tests/ref/4.tsv
 075cc1feb687db2c899a48fb263076a4  tests/ref/5.tsv
+47cee73548cc2a59127615b8f1bc0d6b  tests/ref/adapter_illumina_test3.fa
+47cee73548cc2a59127615b8f1bc0d6b  tests/ref/adapter_pe_test5.fa
