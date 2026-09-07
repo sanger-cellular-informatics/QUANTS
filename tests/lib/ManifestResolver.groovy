@@ -16,11 +16,13 @@ class ManifestResolver {
             "${testsPath}/"
         )
 
-        // Keep the temporary sheet below the project directory. Singularity
+        // Keep the temporary sheet with the nf-test run artefacts. Singularity
         // may start the pipeline process after this helper returns, so a
         // system temporary directory registered with deleteOnExit() can be
-        // gone before it is mounted into the container.
-        Path resolverDir = projectPath.resolve('.nf-test').resolve('manifest-resolver')
+        // gone before it is mounted into the container. The directory is
+        // ignored with the rest of .nf-test and can be removed with nf-test
+        // clean.
+        Path resolverDir = projectPath.resolve('.nf-test').resolve('tests').resolve('manifest-resolver')
         Files.createDirectories(resolverDir)
         File tmpDir = Files.createTempDirectory(resolverDir, 'nf-test-').toFile()
 
