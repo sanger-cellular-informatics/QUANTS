@@ -16,6 +16,8 @@ NXF_VER=25.10.4 nf-test test tests/test[n].main.nf.test --profile <docker|singul
 
 Nextflow 25.10.4 or later is required; the pipeline configuration stops execution with older versions.
 
+Resolved samplesheets are stored under the ignored `.nf-test/tests/manifest-resolver` run directory so container execution can mount them; remove this generated data with `nf-test clean` when required.
+
 On the Sanger farm, load the Singularity and Nextflow modules before running nf-test. The farm module is named `nf-test/v0.9.2`; loading it may also load a newer generic Nextflow module, so load `HGI/common/nextflow/25.10.4` afterwards:
 ```bash
 module load ISG/singularity/3.11.4
