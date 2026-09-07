@@ -24,35 +24,39 @@ nextflow_pipeline {
         }
 
         then {
-            assert workflow.success
+            try {
+                assert workflow.success
 
-            def matches = []
-            new File("${projectDir}/.nf-test/tests").eachDirRecurse { dir ->
-                def candidate = new File(dir, "results/T1/modified_fastq/test_sample_merged.modified.fq.gz")
-                if (candidate.exists()) {
-                    matches << candidate
+                def matches = []
+                new File("${projectDir}/.nf-test/tests").eachDirRecurse { dir ->
+                    def candidate = new File(dir, "results/T1/modified_fastq/test_sample_merged.modified.fq.gz")
+                    if (candidate.exists()) {
+                        matches << candidate
+                    }
                 }
-            }
 
-            assert !matches.isEmpty()
+                assert !matches.isEmpty()
 
-            def output = matches.max { it.lastModified() }
+                def output = matches.max { it.lastModified() }
 
-            def reader = new BufferedReader(
-                new InputStreamReader(
-                    new java.util.zip.GZIPInputStream(new FileInputStream(output)),
-                    "UTF-8"
+                def reader = new BufferedReader(
+                    new InputStreamReader(
+                        new java.util.zip.GZIPInputStream(new FileInputStream(output)),
+                        "UTF-8"
+                    )
                 )
-            )
 
-            def header = reader.readLine()
-            def sequence = reader.readLine()
-            reader.close()
+                def header = reader.readLine()
+                def sequence = reader.readLine()
+                reader.close()
 
-            assert header.startsWith("@")
-            assert sequence.startsWith("GGACTCTCCAGGACTGCCAT")
-            assert sequence.endsWith("GGACAGAGCAGAGCCCAC")
-            assert !sequence.contains("null")
+                assert header.startsWith("@")
+                assert sequence.startsWith("GGACTCTCCAGGACTGCCAT")
+                assert sequence.endsWith("GGACAGAGCAGAGCCCAC")
+                assert !sequence.contains("null")
+            } finally {
+                ManifestResolver.cleanupSheet(resolvedSheet)
+            }
         }
 
     }

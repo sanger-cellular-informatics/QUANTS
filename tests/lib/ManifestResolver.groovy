@@ -31,4 +31,22 @@ class ManifestResolver {
 
         return resolvedSheet
     }
+
+    static void cleanupSheet(File resolvedSheet) {
+        if (resolvedSheet == null) {
+            return
+        }
+
+        File tmpDir = resolvedSheet.parentFile
+        resolvedSheet.delete()
+
+        if (tmpDir?.exists() && tmpDir.listFiles()?.length == 0) {
+            tmpDir.delete()
+        }
+
+        File resolverDir = tmpDir?.parentFile
+        if (resolverDir?.exists() && resolverDir.listFiles()?.length == 0) {
+            resolverDir.delete()
+        }
+    }
 }

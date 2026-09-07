@@ -19,7 +19,11 @@ nextflow_pipeline {
         }
 
         then {
-            assert workflow.failed
+            try {
+                assert workflow.failed
+            } finally {
+                ManifestResolver.cleanupSheet(resolvedSheet)
+            }
         }
 
     }
