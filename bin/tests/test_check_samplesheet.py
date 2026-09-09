@@ -62,8 +62,8 @@ def test_validate_headers_missing_optional_headers():
             "fastq_2",
             "oligo_library",
             "adapter_path",
-            "primer_start",
-            "primer_end",
+            "expt_forward_primer",
+            "expt_reverse_primer",
             "append_start",
             "append_end"
             ]
@@ -306,7 +306,7 @@ def test_check_samplesheet_command_runs_as_expected_fastq(tmp_path):
     output_csv = tmp_path / "samplesheet.valid.csv"
 
     input_csv.write_text(
-        "sample,fastq_1,fastq_2,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform\n"
+        "sample,fastq_1,fastq_2,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform\n"
         "SAMPLE_PE,SAMPLE_PE_RUN1_1.fastq.gz,,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
         "SAMPLE_SE,SAMPLE_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
     )
@@ -334,7 +334,7 @@ def test_check_samplesheet_command_runs_as_expected_fastq(tmp_path):
     expected_output_csv = tmp_path / "expected_output.csv"
 
     expected_output_csv.write_text(
-        "sample,single_end,fastq_1,fastq_2,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform\n"
+        "sample,single_end,fastq_1,fastq_2,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform\n"
         "SAMPLE_PE,1,SAMPLE_PE_RUN1_1.fastq.gz,,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
         "SAMPLE_SE,1,SAMPLE_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
     )
@@ -358,7 +358,7 @@ def test_check_samplesheet_command_runs_as_expected_fastq(tmp_path):
 
     with open(output_csv) as f:
         header = f.readline().strip()
-    expected_header = "sample,single_end,fastq_1,fastq_2,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform"
+    expected_header = "sample,single_end,fastq_1,fastq_2,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform"
     assert header == expected_header, "Header does not match expected output."
 
     # Check if input csv is same as expected output csv
@@ -376,7 +376,7 @@ def test_check_samplesheet_command_runs_as_expected_cram(tmp_path):
     output_csv = tmp_path / "samplesheet.valid.csv"
 
     input_csv.write_text(
-        "sample,cram_path,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform\n"
+        "sample,cram_path,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform\n"
         "SAMPLE_PE,SAMPLE_PE_RUN1_1.cram,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
         "SAMPLE_SE,SAMPLE_SE_RUN1_1.cram,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
     )
@@ -404,7 +404,7 @@ def test_check_samplesheet_command_runs_as_expected_cram(tmp_path):
     expected_output_csv = tmp_path / "expected_output.csv"
 
     expected_output_csv.write_text(
-        "sample,single_end,cram_path,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform\n"
+        "sample,single_end,cram_path,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform\n"
         "SAMPLE_PE,1,SAMPLE_PE_RUN1_1.cram,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
         "SAMPLE_SE,1,SAMPLE_SE_RUN1_1.cram,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
     )
@@ -428,7 +428,7 @@ def test_check_samplesheet_command_runs_as_expected_cram(tmp_path):
 
     with open(output_csv) as f:
         header = f.readline().strip()
-    expected_header = "sample,single_end,cram_path,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform"
+    expected_header = "sample,single_end,cram_path,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform"
     assert header == expected_header, "Header does not match expected output."
 
     # Check if input csv is same as expected output csv

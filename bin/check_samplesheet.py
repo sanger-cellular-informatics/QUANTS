@@ -15,13 +15,11 @@ OPTIONAL_HEADERS = [
         "group_id",
         "oligo_library",
         "adapter_path",
-        "primer_start",
-        "primer_end",
+        "expt_forward_primer",
+        "expt_reverse_primer",
         "append_start",
         "append_end",
-        "read_transform",
-        "expt_forward_primer",
-        "expt_reverse_primer"
+        "read_transform"
   ]
 MIN_NUMBER_OF_POPULATED_COLS = 2
 VALID_FILE_EXTENSIONS = {
@@ -198,12 +196,12 @@ def validate_all_samples(samplesheet_data: list[dict],
 def check_samplesheet(file_in, params_in, file_out):
     """
     This function checks that the samplesheet follows the following structure (with FASTQ as file type):
-    sample,fastq_1,fastq_2,group_id,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform
+    sample,fastq_1,fastq_2,group_id,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform
     SAMPLE_PE,SAMPLE_PE_RUN1_1.fastq.gz,SAMPLE_PE_RUN1_2.fastq.gz,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
     SAMPLE_PE,SAMPLE_PE_RUN2_1.fastq.gz,SAMPLE_PE_RUN2_2.fastq.gz,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
     SAMPLE_SE,SAMPLE_SE_RUN1_1.fastq.gz,,BBBB,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,
     Or, alternatively (with CRAM as file type):
-    sample,cram_path,group_id,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform
+    sample,cram_path,group_id,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform
     SAMPLE_PE,SAMPLE_PE_RUN1_1.cram,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
     SAMPLE_PE,SAMPLE_PE_RUN2_1.cram,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
     SAMPLE_SE,SAMPLE_SE_RUN1_1.cram,BBBB,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,

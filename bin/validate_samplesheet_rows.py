@@ -51,13 +51,11 @@ def get_row(row):
         "append_start"       : row.get('append_start', 'noCol'),
         "append_end"         : row.get('append_end', 'noCol'),
         "adapter_path"       : row.get('adapter_path', 'noCol'),
-        "primer_start"       : row.get('primer_start', 'noCol'),
-        "primer_end"         : row.get('primer_end', 'noCol'),
+        "expt_forward_primer": row.get('expt_forward_primer', 'noCol'),
+        "expt_reverse_primer": row.get('expt_reverse_primer', 'noCol'),
         "oligo_library"      : row.get('oligo_library', 'noCol'),
         "read_transform"     : row.get('read_transform', ''),
-        "group_id"           : row.get('group_id', ''),
-        "expt_forward_primer": row.get('expt_forward_primer', 'noCol'),
-        "expt_reverse_primer": row.get('expt_reverse_primer', 'noCol')
+        "group_id"           : row.get('group_id', '')
     }
 
     return SimpleNamespace(**row_obj)
@@ -203,41 +201,41 @@ def validate_row(row={}, params={}):
         print_error(f"ERROR: {msg}")
         sys.exit(1)
 
-    # If primer_trimming set (and infer_library_orientations is False), then both primer_start and primer_end must in
+    # If primer_trimming set (and infer_library_orientations is False), then both expt_forward_primer and expt_reverse_primer must in
     # the samplesheet
     if params.primer_trimming == "cutadapt" and not params.infer_library_orientations:
 
-        if row.primer_start == "noCol" or row.primer_end == "noCol":
+        if row.expt_forward_primer == "noCol" or row.expt_reverse_primer == "noCol":
             msg = ("If primer_trimming is set globally and infer_library_orientations is globally set to False, the "
-                   "samplesheet must include both the primer_start and primer_end columns.")
+                   "samplesheet must include both the expt_forward_primer and expt_reverse_primer columns.")
             print_error(f"ERROR: {msg}")
             sys.exit(1)
 
-        if len(row.primer_start) == 0:
-            msg = "primer_start should not be empty in the samplesheet."
+        if len(row.expt_forward_primer) == 0:
+            msg = "expt_forward_primer should not be empty in the samplesheet."
             row_errors.append(msg)
 
-        if len(row.primer_end) == 0:
-            msg = "primer_end should not be empty in the samplesheet."
+        if len(row.expt_reverse_primer) == 0:
+            msg = "expt_reverse_primer should not be empty in the samplesheet."
             row_errors.append(msg)
 
-        if (row.primer_start and not is_valid_sequence(row.primer_start)):
-            msg = "Value for primer_start must be provided as a valid DNA sequence in the samplesheet."
+        if (row.expt_forward_primer and not is_valid_sequence(row.expt_forward_primer)):
+            msg = "Value for expt_forward_primer must be provided as a valid DNA sequence in the samplesheet."
             row_errors.append(msg)
-        if (row.primer_end and not is_valid_sequence(row.primer_end)):
-            msg = "Value for primer_end must be provided as a valid DNA sequence in the samplesheet."
+        if (row.expt_reverse_primer and not is_valid_sequence(row.expt_reverse_primer)):
+            msg = "Value for expt_reverse_primer must be provided as a valid DNA sequence in the samplesheet."
             row_errors.append(msg)
 
-    # Check if primer_trimming is not set, then both primer_start and primer_end must not be in the samplesheet.
-    if not params.primer_trimming:
+    # Check if primer_trimming is not set, then both expt_forward_primer and expt_reverse_primer must not be in the samplesheet.
+    if not params.primer_trimming and not params.infer_library_orientations:
 
-        if row.primer_start != "noCol" and not len(row.primer_start) == 0:
-            msg = "If primer_trimming is not set globally, then primer_start column must not exist in the samplesheet or be empty."
-            print_error(f"ERROR: {msg}")
+        if row.expt_forward_primer != "noCol" and not len(row.expt_forward_primer) == 0:
+            msg = "If primer_trimming is not set globallyx, then expt_forward_primer column must not exist in the samplesheet or be empty."
+            print_error(f"ERROR: {msg} {row.expt_forward_primer}")
             sys.exit(1)
 
-        if row.primer_end != "noCol" and not len(row.primer_end) == 0:
-            msg = "If primer_trimming is not set globally, then primer_end column must not exist in the samplesheet or be empty."
+        if row.expt_reverse_primer != "noCol" and not len(row.expt_reverse_primer) == 0:
+            msg = "If primer_trimming is not set globally, then expt_reverse_primer column must not exist in the samplesheet or be empty."
             print_error(f"ERROR: {msg}")
             sys.exit(1)
 
