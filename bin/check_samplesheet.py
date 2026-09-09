@@ -71,14 +71,22 @@ def validate_headers(fieldnames: list = [],
             print("No row to validate headers.")
             sys.exit(1)
 
-        headers_to_check = REQUIRED_HEADERS + OPTIONAL_HEADERS
+        unnamed_column_positions = []
 
-        invalid_headers = [header for header in row_headers if header and header not in headers_to_check]
+        for index, header in enumerate(row_headers):
+            if header and header.startswith("unnamed_col"):
+                column_position = index + 1
+                unnamed_column_positions.append(column_position)
 
-        if invalid_headers:
-            if not [unnamed_col for unnamed_col in invalid_headers if "unnamed_col" in unnamed_col]:
-                raise ValueError(f"ERROR: Check for invalid headers in the samplesheet: {', '.join(invalid_headers)}")
-            raise ValueError(f"ERROR: Check in the samplesheet if there are any extra commas before or after headers. For example: sample,,fastq_1,fastq_2,")
+        if unnamed_column_positions:
+            positions = ", ".join(
+            str(position) for position in unnamed_column_positions
+            )
+
+            raise ValueError(
+                f"ERROR: Unnamed headers found in samplesheet column(s): {positions}. "
+                "Check for extra commas before, between, or after headers."
+            )
 
     else:
         if not fieldnames:

@@ -1,5 +1,6 @@
 import pytest
 import subprocess
+import csv
 
 from check_samplesheet import check_sequencing_fields, OPTIONAL_HEADERS, REQUIRED_HEADERS, validate_all_samples, validate_headers
 from types import SimpleNamespace
@@ -718,9 +719,9 @@ def test_check_samplesheet_extra_column(tmp_path):
     output_csv = tmp_path / "samplesheet.valid.csv"
 
     input_csv.write_text(
-        "sample,fastq_1,fastq_2,oligo_library,var1\n"
-        "SAMPLE_PE,SAMPLE_PE_RUN1_1.fastq.gz,,SAMPLE_PE_meta.csv,var1\n"
-        "SAMPLE_SE,SAMPLE_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,var1\n"
+        "sample,fastq_1,fastq_2,var1,oligo_library,var2\n"
+        "SAMPLE_1,SAMPLE_1_R1.fastq.gz,,var1,SAMPLE_1_meta.csv,var2\n"
+        "SAMPLE_2,SAMPLE_2_R1.fastq.gz,,var1,SAMPLE_2_meta.csv,var2\n"
     )
 
     input_json.write_text(
@@ -737,6 +738,12 @@ def test_check_samplesheet_extra_column(tmp_path):
         '}\n'
     )
 
+    expected_output = [
+        ["sample", "single_end", "fastq_1", "fastq_2", "oligo_library"],
+        ["SAMPLE_1", "1", "SAMPLE_1_R1.fastq.gz", "", "SAMPLE_1_meta.csv"],
+        ["SAMPLE_2", "1", "SAMPLE_2_R1.fastq.gz", "", "SAMPLE_2_meta.csv"]
+    ]
+
     # Run the command to check the samplesheet
     process_out = subprocess.run(
         [
@@ -750,11 +757,14 @@ def test_check_samplesheet_extra_column(tmp_path):
         text=True
     )
 
-    # Assert that sys.exit(1) was called
-    assert process_out.returncode == 1
+    assert process_out.returncode == 0, process_out.stderr
 
-    # Check error message in stdout or stderr
-    assert "ERROR: Check for invalid headers in the samplesheet: var1" in process_out.stderr
+    assert output_csv.exists()
+
+    with output_csv.open(newline="") as handle:
+        actual_output = list(csv.reader(handle))
+
+    assert actual_output == expected_output
 
 
 def test_check_samplesheet_extra_commas(tmp_path):
@@ -800,7 +810,11 @@ def test_check_samplesheet_extra_commas(tmp_path):
     assert process_out.returncode == 1
 
     # Check error message in stdout or stderr
-    assert "ERROR: Check in the samplesheet if there are any extra commas" in process_out.stderr
+    assert (
+        "ERROR: Unnamed headers found in samplesheet column(s): 2. "
+        "Check for extra commas before, between, or after headers."
+     in process_out.stderr
+    )
 
 
 def test_check_samplesheet_multiple_rows_same_sample(tmp_path):
