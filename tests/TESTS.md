@@ -16,7 +16,7 @@ nf-test test tests/test[n].main.nf.test --profile <docker|singularity>
 
 The pipeline configuration enforces the supported Nextflow version and stops execution with older versions.
 
-Resolved samplesheets are stored under the ignored `.nf-test/tests/manifest-resolver` run directory while each test runs so container execution can mount them. They are explicitly removed after the test, while any artefacts left by dry-run or interrupted runs can be removed with `nf-test clean`.
+Resolved samplesheets are stored under each test's `launchDir/manifest-resolver` directory so container execution can mount them. The nf-test `cleanup` block removes them after each test, while any artefacts left by dry-run or interrupted runs can be removed with `nf-test clean`.
 
 Make sure you download/clone `quants-data` from this repository `https://gitlab.internal.sanger.ac.uk/sci/quants-data` into your chosen directory on your local machine. Before running the end-to-end tests copy the contents `ref/` and `sample-data/` directories from your local `quants-data` repository into `tests/ref` and `tests/sample-data` respectively, overwriting existing contents.
 

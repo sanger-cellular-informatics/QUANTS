@@ -2,7 +2,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 class ManifestResolver {
-    static File resolveSheet(def projectDir, String manifestFileName) {
+    static File resolveSheet(def projectDir, def launchDir, String manifestFileName) {
         Path projectPath = new File(projectDir.toString()).toPath().toAbsolutePath().normalize()
         Path testsPath = projectPath.resolve('tests')
         File manifest = testsPath.resolve('manifests').resolve(manifestFileName).toFile()
@@ -16,37 +16,21 @@ class ManifestResolver {
             "${testsPath}/"
         )
 
-        // Keep the temporary sheet with the nf-test run artefacts. Singularity
-        // may start the pipeline process after this helper returns, so a
-        // system temporary directory registered with deleteOnExit() can be
-        // gone before it is mounted into the container. The directory is
-        // ignored with the rest of .nf-test and can be removed with nf-test
-        // clean.
-        Path resolverDir = projectPath.resolve('.nf-test').resolve('tests').resolve('manifest-resolver')
+        // Keep the temporary sheet in this test's nf-test launch directory so
+        // it remains available to the pipeline's container runtime until the
+        // test cleanup block runs.
+        // nf-test does not populate launchDir while listing tests in dry-run
+        // mode. Use the run-level directory only for that parse-time fallback;
+        // executed tests always use their own launchDir.
+        Path resolverBase = launchDir
+            ? new File(launchDir.toString()).toPath()
+            : projectPath.resolve('.nf-test').resolve('tests')
+        Path resolverDir = resolverBase.resolve('manifest-resolver')
         Files.createDirectories(resolverDir)
-        File tmpDir = Files.createTempDirectory(resolverDir, 'nf-test-').toFile()
 
-        File resolvedSheet = new File(tmpDir, manifestFileName.replace(".csv", ".resolved.csv"))
+        File resolvedSheet = resolverDir.resolve(manifestFileName.replace(".csv", ".resolved.csv")).toFile()
         resolvedSheet.text = resolved
 
         return resolvedSheet
-    }
-
-    static void cleanupSheet(File resolvedSheet) {
-        if (resolvedSheet == null) {
-            return
-        }
-
-        File tmpDir = resolvedSheet.parentFile
-        resolvedSheet.delete()
-
-        if (tmpDir?.exists() && tmpDir.listFiles()?.length == 0) {
-            tmpDir.delete()
-        }
-
-        File resolverDir = tmpDir?.parentFile
-        if (resolverDir?.exists() && resolverDir.listFiles()?.length == 0) {
-            resolverDir.delete()
-        }
     }
 }

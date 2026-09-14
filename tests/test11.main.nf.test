@@ -5,7 +5,11 @@ nextflow_pipeline {
 
     test("Should run without failure single-end QC, trimming, read modification, and pyquest quantification with no read transformation") {
 
-        def resolvedSheet = ManifestResolver.resolveSheet(projectDir, "raw-fastq-se-noRC.csv")
+        def resolvedSheet
+
+        setup {
+            resolvedSheet = ManifestResolver.resolveSheet(projectDir, launchDir, "raw-fastq-se-noRC.csv")
+        }
 
         when {
             params {
@@ -26,10 +30,13 @@ nextflow_pipeline {
         }
 
         then {
-            try {
-                assert workflow.success
-            } finally {
-                ManifestResolver.cleanupSheet(resolvedSheet)
+            assert workflow.success
+        }
+        cleanup {
+            if (resolvedSheet && resolvedSheet.exists()) {
+                if (!resolvedSheet.delete()) {
+                    throw new IllegalStateException("Failed to delete resolved samplesheet: ${resolvedSheet}")
+                }
             }
         }
 

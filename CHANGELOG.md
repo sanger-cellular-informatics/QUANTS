@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Require Nextflow `>=25.10.4` with a strict version check.
 * Resolve repository-relative samplesheet paths to absolute paths when nf-tests create their temporary samplesheets.
-* Explicitly remove resolved samplesheets after each test while retaining interrupted-run artefacts for `nf-test clean`.
+* Store resolved samplesheets under each test's nf-test `launchDir` and remove them with the test `cleanup` block.
 * Run Docker-backed tests as the invoking user to avoid root-owned published outputs.
 * Exit immediately when the iRODS `iget` command is unavailable so the nf-test failure message is deterministic.
 * Add checksums for the adapter reference FASTA files supplied by `quants-data`.
