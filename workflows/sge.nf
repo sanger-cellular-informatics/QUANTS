@@ -25,11 +25,6 @@ if ( input_type_options.contains( params.input_type ) == false ) {
     exit 1
 }
 
-// Temporary check, to be removed when infer_library_orientations has been integrated into QUANTS
-if (params.infer_library_orientations) {
-    printErr("WARNING: infer_library_orientations is globally set to True but the workflow is under development")
-}
-
 // Check downsampling options
 if (params.downsampling) {
     if (!(params.downsampling_size instanceof Integer)) {
