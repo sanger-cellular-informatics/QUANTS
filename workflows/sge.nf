@@ -66,7 +66,7 @@ if (params.primer_trimming) {
 }
 
 if (params.primer_cutadapt_options) {
-        msg = "primer_cutadapt_options can no longer be set globally, it should be set as primer_start and primer_end in the samplesheet."
+        msg = "primer_cutadapt_options can no longer be set globally, it should be set as expt_forward_primer and expt_reverse_primer in the samplesheet."
         printErr(msg)
         exit 1
     }
