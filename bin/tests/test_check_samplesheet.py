@@ -308,8 +308,8 @@ def test_check_samplesheet_command_runs_as_expected_fastq(tmp_path):
 
     input_csv.write_text(
         "sample,fastq_1,fastq_2,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform\n"
-        "SAMPLE_PE,SAMPLE_PE_RUN1_1.fastq.gz,,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
-        "SAMPLE_SE,SAMPLE_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
+        "SAMPLE_A_SE,SAMPLE_A_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
+        "SAMPLE_B_SE,SAMPLE_B_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
     )
     
     input_json.write_text(
@@ -336,8 +336,8 @@ def test_check_samplesheet_command_runs_as_expected_fastq(tmp_path):
 
     expected_output_csv.write_text(
         "sample,single_end,fastq_1,fastq_2,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform\n"
-        "SAMPLE_PE,1,SAMPLE_PE_RUN1_1.fastq.gz,,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
-        "SAMPLE_SE,1,SAMPLE_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
+        "SAMPLE_A_SE,1,SAMPLE_A_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
+        "SAMPLE_B_SE,1,SAMPLE_B_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
     )
 
     # Run the command to check the samplesheet

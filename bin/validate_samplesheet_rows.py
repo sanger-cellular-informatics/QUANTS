@@ -201,7 +201,7 @@ def validate_row(row={}, params={}):
         print_error(f"ERROR: {msg}")
         sys.exit(1)
 
-    # If primer_trimming set (and infer_library_orientations is False), then both expt_forward_primer and expt_reverse_primer must in
+    # If primer_trimming set (and infer_library_orientations is False), then both expt_forward_primer and expt_reverse_primer must be in
     # the samplesheet
     if params.primer_trimming == "cutadapt" and not params.infer_library_orientations:
 
@@ -230,7 +230,7 @@ def validate_row(row={}, params={}):
     if not params.primer_trimming and not params.infer_library_orientations:
 
         if row.expt_forward_primer != "noCol" and not len(row.expt_forward_primer) == 0:
-            msg = "If primer_trimming is not set globallyx, then expt_forward_primer column must not exist in the samplesheet or be empty."
+            msg = "If primer_trimming is not set globally, then expt_forward_primer column must not exist in the samplesheet or be empty."
             print_error(f"ERROR: {msg} {row.expt_forward_primer}")
             sys.exit(1)
 
