@@ -71,6 +71,12 @@
 --downsampling_seed                   [integer] Optional seed to give to the downsampler. 100 by default
 ```
 
+## Inferring library orientation options
+
+```
+--infer_library_orientations          [boolean] Define whether the pipeline should infer library orientations. Default `false`.
+```
+
 ## Useful core options
 
 ```console
@@ -88,15 +94,6 @@
     Directory where intermediate result files are stored
 ```
 
-## [BETA] Inferring library orientation options
-
-The --infer_library_orientations parameter and its associated functionality are available in QUANTS.
-
-**Please note** that this functionality is currently in **beta** and should be used with caution. The parameter currently defaults to `False`
-
-```
---infer_library_orientations          [boolean] Define whether the pipeline should infer library orientations.
-```
 
 ## Deprecated Parameters
 
