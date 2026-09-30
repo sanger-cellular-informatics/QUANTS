@@ -1,20 +1,24 @@
 # End-to-end pipeline tests
 
-The `test/` directory contains end-to-end tests for the quants pipeline using the nf-test framework.
+The `tests/` directory contains end-to-end tests for the QUANTS pipeline using the nf-test framework.
 
 ## End-to-end datasets and files
 
-Having retrieved data and placed it in the ref and sample-data folders, tests can be run with the following command:
+Before running the tests, retrieve the required reference and sample data and place them in the `ref/` and `sample-data/` folders. Sanger users should follow the `quants-data` instructions below; users outside Sanger should provide equivalent test datasets. The tests can then be run with the following command:
 ```bash
-NXF_VER=23.10.0 nf-test test --profile <docker|singularity>
+nf-test test --profile <docker|singularity>
 ```
 
 If you are running individual tests, you can run them with the following command:
 ```bash
-NXF_VER=23.10.0 nf-test test tests/test[n].main.nf.test --profile <docker|singularity>
+nf-test test tests/test[n].main.nf.test --profile <docker|singularity>
 ```
 
-Note that the `NXF_VER` is expected to changed in future releases of the pipeline, and should be updated to the version of Nextflow that is being used to run the tests.
+The pipeline configuration enforces the supported Nextflow version and stops execution with older versions.
+
+Each test starts from a samplesheet containing sample metadata and paths to the test data. Nextflow stages the samplesheet before running the pipeline, so relative paths inside it would otherwise be resolved relative to the staged copy rather than the repository. The test helper therefore creates a resolved copy with repository-relative paths converted to absolute paths.
+
+Resolved samplesheets are stored under each test's `launchDir/manifest-resolver` directory so the container runtime can access them. The nf-test `cleanup` block removes each resolved file after the test, while any artefacts left by dry-run or interrupted runs can be removed with `nf-test clean`.
 
 Make sure you download/clone `quants-data` from this repository `https://gitlab.internal.sanger.ac.uk/sci/quants-data` into your chosen directory on your local machine. Before running the end-to-end tests copy the contents `ref/` and `sample-data/` directories from your local `quants-data` repository into `tests/ref` and `tests/sample-data` respectively, overwriting existing contents.
 
@@ -27,9 +31,7 @@ tests/
 ├── lib
 ├── manifests
 ├── modules
-├── modules-testdata
 ├── nextflow.config
-├── quants-data
 ├── ref
 ├── ref-checksums
 ├── sample-data

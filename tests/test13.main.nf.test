@@ -5,7 +5,11 @@ nextflow_pipeline {
 
     test("Should fail when downsampling is enabled and downsampling_size is not an integer") {
 
-        def resolvedSheet = ManifestResolver.resolveSheet(projectDir, "raw-fastq-se.csv")
+        def resolvedSheet
+
+        setup {
+            resolvedSheet = ManifestResolver.resolveSheet(projectDir, launchDir, "raw-fastq-se.csv")
+        }
 
         when {
             params {
@@ -20,6 +24,13 @@ nextflow_pipeline {
 
         then {
             assert workflow.failed
+        }
+        cleanup {
+            if (resolvedSheet && resolvedSheet.exists()) {
+                if (!resolvedSheet.delete()) {
+                    throw new IllegalStateException("Failed to delete resolved samplesheet: ${resolvedSheet}")
+                }
+            }
         }
 
     }
