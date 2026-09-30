@@ -27,8 +27,6 @@ def input_row():
         oligo_library="Library1",
         append_start="",
         append_end="",
-        primer_start="",
-        primer_end="",
         read_transform="",
         adapter_path="",
         group_id=""

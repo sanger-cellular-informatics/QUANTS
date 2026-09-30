@@ -25,11 +25,6 @@ if ( input_type_options.contains( params.input_type ) == false ) {
     exit 1
 }
 
-// Temporary check, to be removed when infer_library_orientations has been integrated into QUANTS
-if (params.infer_library_orientations) {
-    printErr("WARNING: infer_library_orientations is globally set to True but the workflow is under development")
-}
-
 // Check downsampling options
 if (params.downsampling) {
     if (!(params.downsampling_size instanceof Integer)) {
@@ -66,7 +61,7 @@ if (params.primer_trimming) {
 }
 
 if (params.primer_cutadapt_options) {
-        msg = "primer_cutadapt_options can no longer be set globally, it should be set as primer_start and primer_end in the samplesheet."
+        msg = "primer_cutadapt_options can no longer be set globally, it should be set as expt_forward_primer and expt_reverse_primer in the samplesheet."
         printErr(msg)
         exit 1
     }

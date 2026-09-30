@@ -52,13 +52,16 @@ def create_fastq_channels(LinkedHashMap row) {
     meta.group_id                  = row.group_id
     meta.read_transform            = row.read_transform
     meta.adapter_path              = row.adapter_path
-    meta.primer_start              = row.primer_start
-    meta.primer_end                = row.primer_end
     meta.expt_forward_primer       = row.expt_forward_primer
     meta.expt_reverse_primer       = row.expt_reverse_primer
     meta.append_start              = row.append_start
     meta.append_end                = row.append_end
     meta.oligo_library             = row.oligo_library
+
+    if (! params.infer_library_orientations) {
+        meta.primer_start = row.expt_forward_primer
+        meta.primer_end = row.expt_reverse_primer
+    }
 
     def array = []
     if (!file(row.fastq_1).exists()) {
@@ -99,13 +102,16 @@ def create_cram_channels(LinkedHashMap row) {
     meta.group_id                  = row.group_id
     meta.read_transform            = row.read_transform
     meta.adapter_path              = row.adapter_path
-    meta.primer_start              = row.primer_start
-    meta.primer_end                = row.primer_end
     meta.expt_forward_primer       = row.expt_forward_primer
     meta.expt_reverse_primer       = row.expt_reverse_primer
     meta.append_start              = row.append_start
     meta.append_end                = row.append_end
     meta.oligo_library             = row.oligo_library
+
+    if (! params.infer_library_orientations) {
+        meta.primer_start = row.expt_forward_primer
+        meta.primer_end = row.expt_reverse_primer
+    }
 
     def array = []
     if (!file(row.cram_path).exists()) {

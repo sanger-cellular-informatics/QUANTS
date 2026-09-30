@@ -15,13 +15,11 @@ OPTIONAL_HEADERS = [
         "group_id",
         "oligo_library",
         "adapter_path",
-        "primer_start",
-        "primer_end",
+        "expt_forward_primer",
+        "expt_reverse_primer",
         "append_start",
         "append_end",
-        "read_transform",
-        "expt_forward_primer",
-        "expt_reverse_primer"
+        "read_transform"
   ]
 MIN_NUMBER_OF_POPULATED_COLS = 2
 VALID_FILE_EXTENSIONS = {
@@ -73,14 +71,22 @@ def validate_headers(fieldnames: list = [],
             print("No row to validate headers.")
             sys.exit(1)
 
-        headers_to_check = REQUIRED_HEADERS + OPTIONAL_HEADERS
+        unnamed_column_positions = []
 
-        invalid_headers = [header for header in row_headers if header and header not in headers_to_check]
+        for index, header in enumerate(row_headers):
+            if header and header.startswith("unnamed_col"):
+                column_position = index + 1
+                unnamed_column_positions.append(column_position)
 
-        if invalid_headers:
-            if not [unnamed_col for unnamed_col in invalid_headers if "unnamed_col" in unnamed_col]:
-                raise ValueError(f"ERROR: Check for invalid headers in the samplesheet: {', '.join(invalid_headers)}")
-            raise ValueError(f"ERROR: Check in the samplesheet if there are any extra commas before or after headers. For example: sample,,fastq_1,fastq_2,")
+        if unnamed_column_positions:
+            positions = ", ".join(
+            str(position) for position in unnamed_column_positions
+            )
+
+            raise ValueError(
+                f"ERROR: Unnamed headers found in samplesheet column(s): {positions}. "
+                "Check for extra commas before, between, or after headers."
+            )
 
     else:
         if not fieldnames:
@@ -198,15 +204,13 @@ def validate_all_samples(samplesheet_data: list[dict],
 def check_samplesheet(file_in, params_in, file_out):
     """
     This function checks that the samplesheet follows the following structure (with FASTQ as file type):
-    sample,fastq_1,fastq_2,group_id,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform
+    sample,fastq_1,fastq_2,group_id,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform
     SAMPLE_PE,SAMPLE_PE_RUN1_1.fastq.gz,SAMPLE_PE_RUN1_2.fastq.gz,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
     SAMPLE_PE,SAMPLE_PE_RUN2_1.fastq.gz,SAMPLE_PE_RUN2_2.fastq.gz,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
-    SAMPLE_SE,SAMPLE_SE_RUN1_1.fastq.gz,,BBBB,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,
     Or, alternatively (with CRAM as file type):
-    sample,cram_path,group_id,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform
+    sample,cram_path,group_id,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform
     SAMPLE_PE,SAMPLE_PE_RUN1_1.cram,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
     SAMPLE_PE,SAMPLE_PE_RUN2_1.cram,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
-    SAMPLE_SE,SAMPLE_SE_RUN1_1.cram,BBBB,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,
     """
 
     with open(params_in) as f:
