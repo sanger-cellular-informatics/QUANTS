@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+* Update nf-test coverage and documentation for Nextflow `>=25.10.4` across supported container runtimes.
+
 ## 1.0.0.0 - [January 2022]
 
 Initial release of QUANTS, created with the [nf-core](https://nf-co.re/) template.
