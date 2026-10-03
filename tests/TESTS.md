@@ -43,6 +43,7 @@ tests/
 ├── test13.main.nf.test
 ├── test14.main.nf.test
 ├── test15.main.nf.test
+├── test16.main.nf.test
 ├── test2.main.nf.test
 ├── test3.main.nf.test
 ├── test4.main.nf.test
@@ -57,24 +58,24 @@ To confirm that you've retrieved the correct data, and named it appropriately if
 
 ## End-to-end test parameters
 
-| Test | Source | FASTQ or CRAM | SE or PE| RevComp | Read merging | Adapter trimming | Primer Trimming | Read filtering | Read modification | QC | Quantification |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `test1.main.nf.test` | Trimmed | FASTQ | SE | Y | N | N | N | N | Y | N | Y |
-| `test2.main.nf.test` | Trimmed | FASTQ | SE | Y | N | N | N | N | Y | Y | Y |
-| `test3.main.nf.test` | Raw | FASTQ | SE | Y | N | Y | Y | N | Y | Y | Y |
-| `test4.main.nf.test` | Raw | CRAM | SE | Y | N | Y | Y | N | Y | Y | Y |
-| `test5.main.nf.test` | Raw | FASTQ | PE | N | Y (SeqPrep) | Y | Y | N | N | Y | Y |
-| `test6.main.nf.test` | Raw | FASTQ | PE | N | Y (Flash2) | Y | Y | Y | N | Y | Y |
-| `test7.main.nf.test` | Raw | FASTQ | PE | N | Y (SeqPrep) | Y | Y | Y | N | Y | Y |
-| `test8.main.nf.test` | Raw | FASTQ | PE | N | Y (Flash2) | Y | Y | Y | N | Y | Y |
-| `test9.main.nf.test` | Raw | FASTQ | PE | N | Y (Flash2) | Y | Y | Y | N | Y | Y |
-| `test10.main.nf.test` | Raw | FASTQ | SE | N | N | Y | Y | Y | N | Y | Y |
-| `test11.main.nf.test` | Raw | FASTQ | SE | N | N | Y | Y | N | Y | Y | Y |
-| `test12.main.nf.test` | Raw | CRAM | SE | N | N | Y | Y | N | Y | Y | Y |
-| `test13.main.nf.test` | Raw | CRAM | PE | N | N | Y | Y | N | Y | Y | Y | Y |
-| `test14.main.nf.test` | Raw | FASTQ | - | - | - | - | - | - | - | - | - | Y |
-| `test15.main.nf.test` | Raw | FASTQ | PE | Y | Y (Flash2) | N | Y | N | Y | N | N |
-| `test16.main.nf.test` | Raw | FASTQ | SE | Y | N | Y | Y | N | Y | Y | Y |
+| Test | Source | FASTQ or CRAM | SE or PE| RevComp | Infer library orientation | Read merging | Adapter trimming | Primer Trimming | Read filtering | Read modification | QC | Quantification |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `test1.main.nf.test` | Trimmed | FASTQ | SE | Y | N | N | N | N | N | Y | N | Y |
+| `test2.main.nf.test` | Trimmed | FASTQ | SE | Y | N | N | N | N | N | Y | Y | Y |
+| `test3.main.nf.test` | Raw | FASTQ | SE | Y | N | N | Y | Y | N | Y | Y | Y |
+| `test4.main.nf.test` | Raw | CRAM | SE | Y | N | N | Y | Y | N | Y | Y | Y |
+| `test5.main.nf.test` | Raw | FASTQ | PE | N | N | Y (SeqPrep) | Y | Y | N | N | Y | Y |
+| `test6.main.nf.test` | Raw | FASTQ | PE | N | N | Y (Flash2) | Y | Y | Y | N | Y | Y |
+| `test7.main.nf.test` | Raw | FASTQ | PE | N | N | Y (SeqPrep) | Y | Y | Y | N | Y | Y |
+| `test8.main.nf.test` | Raw | FASTQ | PE | N | N | Y (Flash2) | Y | Y | Y | N | Y | Y |
+| `test9.main.nf.test` | Raw | FASTQ | PE | N | N | Y (Flash2) | Y | Y | Y | N | Y | Y |
+| `test10.main.nf.test` | Raw | FASTQ | SE | N | N | N | Y | Y | Y | N | Y | Y |
+| `test11.main.nf.test` | Raw | FASTQ | SE | N | N | N | Y | Y | N | Y | Y | Y |
+| `test12.main.nf.test` | Raw | CRAM | SE | N | N | N | Y | Y | N | Y | Y | Y |
+| `test13.main.nf.test` | Raw | CRAM | PE | N | N | N | Y | Y | N | Y | Y | Y | Y |
+| `test14.main.nf.test` | Raw | FASTQ | - | - | N | - | - | - | - | - | - | - | Y |
+| `test15.main.nf.test` | Raw | FASTQ | PE | Y | N | Y (Flash2) | N | Y | N | Y | N | N |
+| `test16.main.nf.test` | Raw | FASTQ | SE | Y | Y | N | Y | Y | N | Y | Y | Y |
 
 # Module tests
 
@@ -132,6 +133,7 @@ tests/test12.main.nf.test
 tests/test13.main.nf.test
 tests/test14.main.nf.test
 tests/test15.main.nf.test
+tests/test16.main.nf.test
 ```
 
 ### Python tests
