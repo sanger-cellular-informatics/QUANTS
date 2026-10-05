@@ -2,9 +2,12 @@
 
 The `tests/` directory contains end-to-end tests for the QUANTS pipeline using the nf-test framework.
 
+**Note:** End-to-end tests are for internal Sanger use only due to test data availability.
+
+
 ## End-to-end datasets and files
 
-Before running the tests, retrieve the required reference and sample data and place them in the `ref/` and `sample-data/` folders. Sanger users should follow the `quants-data` instructions below; users outside Sanger should provide equivalent test datasets. The tests can then be run with the following command:
+Before running the tests, retrieve the required reference and sample data and place them in the `ref/` and `sample-data/` folders. Sanger users should follow the `quants-data` instructions below. The tests can then be run with the following command:
 ```bash
 nf-test test --profile <docker|singularity>
 ```
