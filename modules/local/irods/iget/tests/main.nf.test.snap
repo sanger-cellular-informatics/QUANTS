@@ -1,0 +1,32 @@
+{
+    "irods_iget - failure": {
+        "content": [
+            {
+                "status": "failed",
+                "message": "ERROR: iget not found (iRODS iCommands required)"
+            }
+        ],
+        "timestamp": "2026-10-01T16:16:15.107563",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    },
+    "local_files": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "dummy_sample"
+                    },
+                    "10754_1#20.cram:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ]
+            ]
+        ],
+        "timestamp": "2026-10-05T15:16:41.421065668",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "25.10.4"
+        }
+    }
+}

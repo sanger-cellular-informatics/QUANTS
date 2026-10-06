@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * Update nf-test coverage and documentation for Nextflow `>=25.10.4` across supported container runtimes.
+* Updated the module which retrieves files from iRODS to follow nf-core standards, and to retrieve multiple files relating to a sample
 
 ## 1.0.0.0 - [January 2022]
 
