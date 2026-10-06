@@ -1,0 +1,64 @@
+name: "irods_iget"
+description: |
+  "Download files relating to a sample from iRODS, given iRODS path(s)"
+keywords:
+  - irods
+  - iget
+  - download
+tools:
+  - iget:
+      description: "iRODS data management command-line client"
+      homepage: "https://irods.org"
+      documentation: "https://docs.irods.org"
+
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+           e.g. `[ id:'sample1' ]`
+
+          No specific fields in this map are used in this process
+
+          All fields are preserved by the module
+    - irods_paths:
+        type: string
+        description: Paths to files to be retrieved from iRODS
+
+output:
+  local_files:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - reads:
+          type: file
+          description: File(s) retrieved from iRODS
+  versions_irods_client:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - "irods_client":
+          type: string
+          description: The name of the tool
+      - "iget -h 2>&1 | grep \"Version\" | awk '{print $3}'":
+          type: eval
+          description: The expression to obtain the version of the tool
+
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The name of the process
+      - irods_client:
+          type: string
+          description: The name of the tool
+      - "iget -h 2>&1 | grep \"Version\" | awk '{print $3}'":
+          type: eval
+          description: The expression to obtain the version of the tool
+
+authors:
+  - "@zuheirzaidon"
+maintainers:
+  - "@ZakiyaSalemahomed"
