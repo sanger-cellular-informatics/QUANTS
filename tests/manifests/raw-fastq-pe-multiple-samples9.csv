@@ -1,4 +1,4 @@
-sample,fastq_1,fastq_2,oligo_library,primer_start,primer_end,adapter_path
+sample,fastq_1,fastq_2,oligo_library,expt_forward_primer,expt_reverse_primer,adapter_path
 lib,tests/sample-data/libR1.fq.gz,tests/sample-data/libR2.fq.gz,tests/ref/5.tsv,ACTACTGAGGACCACAAAATGGTA,AGAGCTTAAGTTTCAGCATTCTC,tests/ref/adapter_pe_test5.fa
 u,tests/sample-data/uR1.fq.gz,tests/sample-data/uR2.fq.gz,tests/ref/5.tsv,ACTACTGAGGACCACAAAATGGTA,AGAGCTTAAGTTTCAGCATTCTC,tests/ref/adapter_pe_test5.fa
 v,tests/sample-data/vR1.fq.gz,tests/sample-data/vR2.fq.gz,tests/ref/5.tsv,ACTACTGAGGACCACAAAATGGTA,AGAGCTTAAGTTTCAGCATTCTC,tests/ref/adapter_pe_test5.fa
