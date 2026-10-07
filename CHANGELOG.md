@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Infer library orientation within QUANTS from experimental primers, FASTQ reads, and library metadata.
 * Support the `expt_forward_primer` and `expt_reverse_primer` samplesheet fields.
-* Concatenate multiple FASTQ files for a sample before processing.
 * End-to-end coverage for inferred library orientations.
 
 ### Changed
