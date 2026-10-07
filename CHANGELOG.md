@@ -3,12 +3,20 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 5.0.0 - [7th October 2026]
+
+### Added
+
+* Infer library orientation within QUANTS from experimental primers, FASTQ reads, and library metadata.
+* Support the `expt_forward_primer` and `expt_reverse_primer` samplesheet fields.
+* Concatenate multiple FASTQ files for a sample before processing.
+* End-to-end coverage for inferred library orientations.
 
 ### Changed
 
-* Update nf-test coverage and documentation for Nextflow `>=25.10.4` across supported container runtimes.
-* Updated the module which retrieves files from iRODS to follow nf-core standards, and to retrieve multiple files relating to a sample
+* Require Nextflow `>=25.10.4` and update nf-test coverage and documentation for supported container runtimes.
+* Use experimental primer fields in input validation, metadata, and end-to-end test manifests.
+* Update the iRODS file retrieval module to follow nf-core standards and retrieve multiple files for a sample.
 
 ## 1.0.0.0 - [January 2022]
 
