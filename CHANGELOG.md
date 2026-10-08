@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Require Nextflow `>=25.10.4` and update nf-test coverage and documentation for supported container runtimes.
 * Use experimental primer fields in input validation, metadata, and end-to-end test manifests.
+* Allow extra, unused samplesheet columns without failing validation.
 * Update the iRODS file retrieval module to follow nf-core standards and retrieve multiple files for a sample.
 
 ## 1.0.0.0 - [January 2022]
