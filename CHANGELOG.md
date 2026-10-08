@@ -10,13 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Infer library orientation within QUANTS from experimental primers, FASTQ reads, and library metadata.
 * Support the `expt_forward_primer` and `expt_reverse_primer` samplesheet fields.
 * End-to-end coverage for inferred library orientations.
+* An iRODS file retrieval module that follows nf-core standards and supports multiple files per sample (not yet used by the pipeline).
 
 ### Changed
 
 * Require Nextflow `>=25.10.4` and update nf-test coverage and documentation for supported container runtimes.
 * Use experimental primer fields in input validation, metadata, and end-to-end test manifests.
 * Allow extra, unused samplesheet columns without failing validation.
-* Update the iRODS file retrieval module to follow nf-core standards and retrieve multiple files for a sample.
 
 ## 1.0.0.0 - [January 2022]
 
