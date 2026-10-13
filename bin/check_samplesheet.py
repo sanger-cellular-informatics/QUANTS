@@ -219,8 +219,9 @@ def check_samplesheet(file_in, params_in, file_out):
     sample_mapping_dict = {}
     sample_meta = {}
 
+    delimiter = "\t" if file_in.lower().endswith(".tsv") else ","
     with open(file_in, "r") as f_in:
-        f_reads = csv.DictReader(f_in)
+        f_reads = csv.DictReader(f_in, delimiter=delimiter)
 
         # Check headers
         f_reads.fieldnames = [
