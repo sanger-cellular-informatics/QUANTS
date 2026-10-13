@@ -1039,3 +1039,63 @@ def test_check_samplesheet_same_sample_inconsistent_metadata(tmp_path):
     assert "Rows for the same sample must have identical metadata" in process_out.stdout
     assert "differs in: oligo_library, append_end" in process_out.stdout
     assert "Sample: 'SAMPLE_1'" in process_out.stdout
+
+
+def test_check_samplesheet_tsv_input(tmp_path):
+    # Prepare a minimal valid tsv samplesheet
+    input_tsv = tmp_path / "samplesheet.tsv"
+    input_json = tmp_path / "params.json"
+    output_csv = tmp_path / "samplesheet.valid.csv"
+
+    input_tsv.write_text(
+        "sample\tfastq_1\tfastq_2\toligo_library\n"
+        "SAMPLE_1\tSAMPLE_1_RUN1_1.fastq.gz\t\tSAMPLE_1_meta.csv\n"
+        "SAMPLE_2\tSAMPLE_2_RUN1_1.fastq.gz\t\tSAMPLE_2_meta.csv\n"
+    )
+
+    input_json.write_text(
+        '{\n'
+        '"single_end": true,\n'
+        '"input_type": "fastq",\n'
+        '"raw_sequencing_qc": true,\n'
+        '"adapter_trimming": "",\n'
+        '"primer_trimming": "",\n'
+        '"read_modification": false,\n'
+        '"transform_library": false,\n'
+        '"quantification": "pyquest",\n'
+        '"downsampling": false\n'
+        '}\n'
+    )
+
+    expected_output_csv = tmp_path / "expected_output.csv"
+
+    # Output samplesheet is always comma-separated
+    expected_output_csv.write_text(
+        "sample,single_end,fastq_1,fastq_2,oligo_library\n"
+        "SAMPLE_1,1,SAMPLE_1_RUN1_1.fastq.gz,,SAMPLE_1_meta.csv\n"
+        "SAMPLE_2,1,SAMPLE_2_RUN1_1.fastq.gz,,SAMPLE_2_meta.csv\n"
+    )
+
+    # Run the command to check the samplesheet
+    _ = subprocess.run(
+        [
+            "python3",
+            "bin/check_samplesheet.py",
+            str(input_tsv),
+            str(input_json),
+            str(output_csv)
+        ],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+
+    # Check that the output file exists
+    assert output_csv.exists()
+
+    # Check if expected output csv is same as output csv
+    with open(expected_output_csv, encoding="utf-8") as f_in, open(output_csv, encoding="utf-8") as f_out:
+        expected_output_csv = f_in.read().strip()
+        output_content = f_out.read().strip()
+
+    assert expected_output_csv == output_content, "Input and output samplesheet contents do not match."
