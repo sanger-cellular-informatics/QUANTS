@@ -10,6 +10,22 @@ import argparse
 
 from validate_samplesheet_rows import get_params, get_row, validate_row, display_validation_report
 
+REQUIRED_HEADERS = ["sample"]
+OPTIONAL_HEADERS = [
+        "group_id",
+        "oligo_library",
+        "adapter_path",
+        "expt_forward_primer",
+        "expt_reverse_primer",
+        "append_start",
+        "append_end",
+        "read_transform"
+  ]
+MIN_NUMBER_OF_POPULATED_COLS = 2
+VALID_FILE_EXTENSIONS = {
+        "fastq": (".fastq.gz", ".fq.gz"),
+        "cram": (".cram",)
+    }
 
 def parse_args(args=None):
     Description = "Reformat QUANTS samplesheet file and check its contents."
@@ -45,41 +61,32 @@ def validate_headers(fieldnames: list = [],
                      file_type: str = "",
                      row_headers: list = [],
                      is_params: bool = False) -> list:
-
-    HEADERS = []
-
-    REQUIRED_HEADERS = ["sample"]
     if file_type == "fastq":
         REQUIRED_HEADERS.extend(["fastq_1", "fastq_2"])
     elif file_type == "cram":
         REQUIRED_HEADERS.extend(["cram_path"])
-
-    OPTIONAL_HEADERS = [
-            "group_id",
-            "oligo_library",
-            "adapter_path",
-            "primer_start",
-            "primer_end",
-            "append_start",
-            "append_end",
-            "read_transform"
-        ]
-
-    invalid_headers = []
 
     if is_params:
         if not row_headers:
             print("No row to validate headers.")
             sys.exit(1)
 
-        headers_to_check = REQUIRED_HEADERS + OPTIONAL_HEADERS
+        unnamed_column_positions = []
 
-        invalid_headers = [header for header in row_headers if header and header not in headers_to_check]
+        for index, header in enumerate(row_headers):
+            if header and header.startswith("unnamed_col"):
+                column_position = index + 1
+                unnamed_column_positions.append(column_position)
 
-        if invalid_headers:
-            if not [unnamed_col for unnamed_col in invalid_headers if "unnamed_col" in unnamed_col]:
-                raise ValueError(f"ERROR: Check for invalid headers in the samplesheet: {', '.join(invalid_headers)}")
-            raise ValueError(f"ERROR: Check in the samplesheet if there are any extra commas before or after headers. For example: sample,,fastq_1,fastq_2,")
+        if unnamed_column_positions:
+            positions = ", ".join(
+            str(position) for position in unnamed_column_positions
+            )
+
+            raise ValueError(
+                f"ERROR: Unnamed headers found in samplesheet column(s): {positions}. "
+                "Check for extra commas before, between, or after headers."
+            )
 
     else:
         if not fieldnames:
@@ -91,14 +98,14 @@ def validate_headers(fieldnames: list = [],
             raise ValueError(f"ERROR: samplesheet missing required headers: {', '.join(missing_required)}")
 
         # Check if all optional headers are present
-        HEADERS = REQUIRED_HEADERS + OPTIONAL_HEADERS
+        all_headers = REQUIRED_HEADERS + OPTIONAL_HEADERS
         missing_optional = [col for col in OPTIONAL_HEADERS if col not in fieldnames]
         if missing_optional:
             print(f"WARNING: samplesheet missing optional headers: {', '.join(missing_optional)}")
 
-        HEADERS = list(filter(lambda item: item not in missing_optional, HEADERS))
+        valid_headers = [header for header in all_headers if header not in missing_optional]
 
-        return HEADERS
+        return valid_headers
 
 
 def check_sequencing_fields(input_type: str,
@@ -107,11 +114,6 @@ def check_sequencing_fields(input_type: str,
     """
     Validate sequencing input fields and file paths.
     """
-
-    FILE_EXTENSIONS = {
-        "fastq": (".fastq.gz", ".fq.gz"),
-        "cram": (".cram",)
-    }
 
     files_to_check = []
 
@@ -126,7 +128,7 @@ def check_sequencing_fields(input_type: str,
                         ",".join(str(v) if v is not None else "" for v in line.values()))
 
         files_to_check.append(fastq_1)
-        
+
         if single_end:
             if fastq_2:
                 print_error("fastq_2 provided but single_end is set globally to True!",
@@ -145,14 +147,14 @@ def check_sequencing_fields(input_type: str,
         cram_path = line.get("cram_path")
 
         if not cram_path:
-                print_error("cram_path file path missing!",
-                            "Line",
-                            ",".join(str(v) if v is not None else "" for v in line.values()))
+            print_error("cram_path file path missing!",
+                        "Line",
+                        ",".join(str(v) if v is not None else "" for v in line.values()))
 
         files_to_check.append(cram_path)
 
     # Check file path contains no spaces and right extension
-    valid_extensions = FILE_EXTENSIONS.get(input_type)
+    valid_extensions = VALID_FILE_EXTENSIONS.get(input_type)
 
     for file in files_to_check:
         if " " in file:
@@ -170,14 +172,17 @@ def validate_all_samples(samplesheet_data: list[dict],
                          params: dict,
                          file_type: str):
     """
-    Processes all rows in the samplesheet, collecting all validation errors.
+    Processes all rows in the samplesheet, collecting all validation warnings and errors.
     """
 
+    all_validation_warnings = []
     all_validation_errors = []
 
     processed_params = get_params(params)
 
     for i, row in enumerate(samplesheet_data, start=2):
+
+        # checks for additional columns or extra commas
         validate_headers(row_headers = list(row.keys()),
                          file_type = file_type,
                           is_params = True)
@@ -186,24 +191,26 @@ def validate_all_samples(samplesheet_data: list[dict],
             row['row_identifier'] = i
 
         processed_row = get_row(row)
-        valid_row = validate_row(processed_row, processed_params, all_validation_errors)
+        row_warnings, row_errors = validate_row(processed_row, processed_params)
 
-    if not valid_row and all_validation_errors:
-        display_validation_report(all_validation_errors)
+        all_validation_warnings.extend(row_warnings)
+        all_validation_errors.extend(row_errors)
+
+    if any(all_validation_warnings) or any(all_validation_errors):
+        display_validation_report(all_validation_warnings,
+                                  all_validation_errors)
 
 
 def check_samplesheet(file_in, params_in, file_out):
     """
     This function checks that the samplesheet follows the following structure (with FASTQ as file type):
-    sample,fastq_1,fastq_2,group_id,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform
+    sample,fastq_1,fastq_2,group_id,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform
     SAMPLE_PE,SAMPLE_PE_RUN1_1.fastq.gz,SAMPLE_PE_RUN1_2.fastq.gz,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
     SAMPLE_PE,SAMPLE_PE_RUN2_1.fastq.gz,SAMPLE_PE_RUN2_2.fastq.gz,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
-    SAMPLE_SE,SAMPLE_SE_RUN1_1.fastq.gz,,BBBB,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,
     Or, alternatively (with CRAM as file type):
-    sample,cram_path,group_id,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform
-    SAMPLE_PE,SAMPLE_PE_RUN1_1.cram,SAMPLE_PE_RUN1_2.fastq.gz,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
-    SAMPLE_PE,SAMPLE_PE_RUN2_1.cram,,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
-    SAMPLE_SE,SAMPLE_SE_RUN1_1.cram,,BBBB,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,
+    sample,cram_path,group_id,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform
+    SAMPLE_PE,SAMPLE_PE_RUN1_1.cram,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
+    SAMPLE_PE,SAMPLE_PE_RUN2_1.cram,AAAA,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement
     """
 
     with open(params_in) as f:
@@ -214,8 +221,6 @@ def check_samplesheet(file_in, params_in, file_out):
     with open(file_in, "r") as f_in:
         f_reads = csv.DictReader(f_in)
 
-        MIN_COLS = 2
-
         # Check headers
         f_reads.fieldnames = [
                     name if name.strip() else f"unnamed_col_{i}"
@@ -224,7 +229,7 @@ def check_samplesheet(file_in, params_in, file_out):
 
         headers = [header.strip() for header in f_reads.fieldnames if header]
 
-        HEADERS = validate_headers(fieldnames = headers, file_type = params['input_type'])
+        valid_headers = validate_headers(fieldnames = headers, file_type = params['input_type'])
 
         # For dealing with printed message if header row contains fewer columns than the other rows
         flatten_row = lambda values: (
@@ -237,7 +242,7 @@ def check_samplesheet(file_in, params_in, file_out):
         group_id = []
 
         header_len = len(headers)
-        
+
         f_reads_ln = list(f_reads)
 
         # Check sample entries
@@ -257,10 +262,10 @@ def check_samplesheet(file_in, params_in, file_out):
 
             num_cols = len([x for x in lspl if x])
 
-            if num_cols < MIN_COLS:
+            if num_cols < MIN_NUMBER_OF_POPULATED_COLS:
                 print_error(
                     "Invalid number of populated columns (minimum = {})!".format(
-                        MIN_COLS
+                        MIN_NUMBER_OF_POPULATED_COLS
                     ),
                     "Line",
                     ",".join(str(v) if v is not None else "" for v in line.values()),
@@ -278,7 +283,7 @@ def check_samplesheet(file_in, params_in, file_out):
 
             # Get group_id for later check
             group_id += [line.get("group_id")]
-                                
+
             # Check file extension
             single_end = int(params['single_end'])
             check_sequencing_fields(input_type = params['input_type'],
@@ -289,7 +294,7 @@ def check_samplesheet(file_in, params_in, file_out):
             # Get rest of the info from file read line and skip sample to avoid duplication in the file out.
             # Example: [fastq_1,fastq_2,oligo_library,adapter_path,LibAmpF,LibAmpR,read_transform]
             sample_info = []
-            rest_info = [line.get(h) for h in HEADERS if h != "sample"]
+            rest_info = [line.get(h) for h in valid_headers if h != "sample"]
             sample_info = [single_end, *rest_info]
 
             # Create sample mapping dictionary = { sample: [ single_end, fastq_1, fastq_2 ] } or { sample: [ single_end, cram_path ] }
@@ -323,8 +328,8 @@ def check_samplesheet(file_in, params_in, file_out):
             csv_writer = csv.writer(f_out)
 
             # Add column "single_end" in output csv file headers
-            HEADERS.insert(1, "single_end")
-            csv_writer.writerow(HEADERS)
+            valid_headers.insert(1, "single_end")
+            csv_writer.writerow(valid_headers)
 
             for sample in sorted(sample_mapping_dict.keys()):
 

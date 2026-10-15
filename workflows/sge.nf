@@ -61,7 +61,7 @@ if (params.primer_trimming) {
 }
 
 if (params.primer_cutadapt_options) {
-        msg = "primer_cutadapt_options can no longer be set globally, it should be set as primer_start and primer_end in the samplesheet."
+        msg = "primer_cutadapt_options can no longer be set globally, it should be set as expt_forward_primer and expt_reverse_primer in the samplesheet."
         printErr(msg)
         exit 1
     }
@@ -181,35 +181,33 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 ========================================================================================
 */
 
-// Don't overwrite global params.modules, create a copy instead and use that within the main script.
-def modules = params.modules.clone()
-
 // MultiQC
-def multiqc_options   = modules['multiqc']
-multiqc_options.args += params.multiqc_title ? Utils.joinModuleArgs(["--title \"$params.multiqc_title\""]) : ''
+params.modules.multiqc.args += params.multiqc_title ? Utils.joinModuleArgs(["--title \"$params.multiqc_title\""]) : ''
 
 //
 // MODULE: Local to the pipeline
 //
 // editorconfig-checker-disable
-include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions' addParams( options: [publish_files : ['tsv':'']] )
-include { INPUT_CHECK } from '../subworkflows/local/input_check' addParams( options: [:] )
-include { CRAM_TO_FASTQ } from '../subworkflows/local/cram_to_fastq' addParams( options: [:] )
-include { READ_TRANSFORM } from '../subworkflows/local/read_transform' addParams( options: [:] )
-include { READ_MERGING } from '../subworkflows/local/read_merging' addParams( options: [:] )
+include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions'
+include { INPUT_CHECK } from '../subworkflows/local/input_check'
+include { CRAM_TO_FASTQ } from '../subworkflows/local/cram_to_fastq'
+include { READ_TRANSFORM } from '../subworkflows/local/read_transform'
+include { READ_MERGING } from '../subworkflows/local/read_merging'
 // TO DO: Both trimming steps use cutadapt - once stable, look at combining / abstraction to avoid duplication here
-include { ADAPTER_TRIMMING } from '../subworkflows/local/adapter_trimming' addParams( options: [:] )
-include { PRIMER_TRIMMING } from '../subworkflows/local/primer_trimming' addParams( options: [:] )
-include { READ_FILTERING } from '../subworkflows/local/read_filtering' addParams( options: [:] )
-include { READ_MODIFICATION } from '../subworkflows/local/read_modification' addParams( options: [:] )
-include { QUANTIFICATION } from '../subworkflows/local/quantification' addParams( options: [:] )
+include { ADAPTER_TRIMMING } from '../subworkflows/local/adapter_trimming'
+include { PRIMER_TRIMMING } from '../subworkflows/local/primer_trimming'
+include { READ_FILTERING } from '../subworkflows/local/read_filtering'
+include { READ_MODIFICATION } from '../subworkflows/local/read_modification'
+include { QUANTIFICATION } from '../subworkflows/local/quantification'
 include { SEQUENCING_QC as RAW_SEQUENCING_QC;
           SEQUENCING_QC as MERGED_SEQUENCING_QC;
           SEQUENCING_QC as ADAPTER_TRIMMED_SEQUENCING_QC;
           SEQUENCING_QC as PRIMER_TRIMMED_SEQUENCING_QC;
           SEQUENCING_QC as FILTERED_SEQUENCING_QC
-        } from '../subworkflows/local/sequencing_qc' addParams( options: [:] )
-include { COLLATE_CUTADAPT_JSONS } from '../modules/local/cutadapt_json_collation/main.nf' addParams( options: [:] )
+        } from '../subworkflows/local/sequencing_qc'
+include { COLLATE_CUTADAPT_JSONS } from '../modules/local/cutadapt_json_collation/main.nf'
+
+include { FASTQ_INFER_LIBRARY_ORIENTATIONS } from '../subworkflows/local/fastq_infer_library_orientations/main.nf'
 
 // Installed from nf-core but modified substantially
 include { SEQTK_SAMPLE } from '../modules/local/seqtk/sample/main'
@@ -218,7 +216,7 @@ include { SEQTK_SAMPLE } from '../modules/local/seqtk/sample/main'
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { MULTIQC } from '../modules/nf-core/multiqc/main' addParams( options: multiqc_options   )
+include { MULTIQC } from '../modules/nf-core/multiqc/main'
 
 //
 // FUNCTIONS: collection of custom functions
@@ -252,12 +250,22 @@ workflow SGE {
         //
         CRAM_TO_FASTQ(INPUT_CHECK.out.seq_data)
         ch_raw_reads = CRAM_TO_FASTQ.out.reads
-        ch_adapter_trim = ch_raw_reads
         ch_software_versions = ch_software_versions.mix(CRAM_TO_FASTQ.out.versions)
     } else {
         ch_raw_reads = INPUT_CHECK.out.seq_data
-        ch_adapter_trim = INPUT_CHECK.out.seq_data
     }
+
+    //  SUBWORKFLOW: Infer library orientations
+    //  Updates read metadata for downstream processing
+    if (params.infer_library_orientations) {
+        FASTQ_INFER_LIBRARY_ORIENTATIONS(ch_raw_reads)
+        ch_raw_reads = FASTQ_INFER_LIBRARY_ORIENTATIONS.out.reads
+        // Versions not added as versions done as topics in module.
+        // This not compatible with version style in use in pipeline.
+    }
+
+    // adapter trimming (and other downstream processes) see updated meta
+    ch_adapter_trim = ch_raw_reads
 
     //
     // SUBWORKFLOW: Downsample input files

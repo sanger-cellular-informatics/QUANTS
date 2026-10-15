@@ -1,0 +1,49 @@
+nextflow_pipeline {
+
+    name "Test Workflow main.nf"
+    script "main.nf"
+
+    // Based on test3.main.nf.test with
+    // - infer library orientations = true included in params
+    // - input file with expt primers only i.e. no append_start, append_end, read_transform
+    test("Should run single-end QC, infer library orientations, trimming, modification, transform, and pyquest quantification without failures") {
+
+        def resolvedSheet
+
+        setup {
+            resolvedSheet = ManifestResolver.resolveSheet(projectDir, launchDir, "raw-fastq-se3-infer-on.csv")
+        }
+
+        when {
+            params {
+                input = "${resolvedSheet}"
+                single_end = true
+                input_type = "fastq"
+                raw_sequencing_qc = true
+                infer_library_orientations = true
+                adapter_trimming = "cutadapt"
+                adapter_trimming_qc = true
+                primer_trimming = "cutadapt"
+                primer_trimming_qc = true
+                read_modification = true
+                append_quality = "?"
+                transform_library = true
+                pyquest_library_converter_options = "-N 1 -S 24"
+                quantification = "pyquest"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+        cleanup {
+            if (resolvedSheet && resolvedSheet.exists()) {
+                if (!resolvedSheet.delete()) {
+                    throw new IllegalStateException("Failed to delete resolved samplesheet: ${resolvedSheet}")
+                }
+            }
+        }
+
+    }
+
+}

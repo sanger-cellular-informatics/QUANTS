@@ -71,6 +71,12 @@
 --downsampling_seed                   [integer] Optional seed to give to the downsampler. 100 by default
 ```
 
+## Inferring library orientation options
+
+```
+--infer_library_orientations          [boolean] Define whether the pipeline should infer library orientations. Default `false`.
+```
+
 ## Useful core options
 
 ```console
@@ -88,6 +94,7 @@
     Directory where intermediate result files are stored
 ```
 
+
 ## Deprecated Parameters
 
 With the release of QUANTS version 4.0.0.0, the following parameters can no longer be set globally and must now be specified in the samplesheet for each individual sample:
@@ -95,7 +102,7 @@ With the release of QUANTS version 4.0.0.0, the following parameters can no long
 | Column         | Description                                                                                                                |
 |----------------|----------------------------------------------------------------------------------------------------------------------------|
 | `adapter_cutadapt_options` | Now set as `adapter_path` in samplesheet. |
-| `primer_cutadapt_options`  | Now set as `primer_start` and `primer_end` in samplesheet. |
+| `primer_cutadapt_options`  | Now set as `expt_forward_primer` and `expt_reverse_primer` in samplesheet. |
 | `append_start`             | Set as `append_start` in samplesheet. |
 | `append_end`               | Set as `append_end` in samplesheet. |
 | `oligo_library`            | Set as `oligo_library` in samplesheet. |

@@ -1,43 +1,43 @@
-import subprocess
-from unittest import mock
 import pytest
-from check_samplesheet import validate_headers, check_sequencing_fields
+import subprocess
+import csv
+
+from check_samplesheet import check_sequencing_fields, OPTIONAL_HEADERS, REQUIRED_HEADERS, validate_all_samples, validate_headers
+from types import SimpleNamespace
+from unittest import mock
 
 
-REQUIRED_HEADERS = [
-            "sample",
-            "fastq_1",
-            "fastq_2"
-        ]
-
-OPTIONAL_HEADERS = [
-            "oligo_library",
-            "adapter_path",
-            "primer_start",
-            "primer_end",
-            "append_start",
-            "append_end",
-            "read_transform"
-        ]
+@pytest.fixture(autouse=True)
+def reset_required_headers():
+    REQUIRED_HEADERS[:] = ["sample"]
 
 
-def test_validate_headers_all_present():
-    all_fieldnames = [
-            "sample",
-            "fastq_1",
-            "fastq_2",
-            "oligo_library",
-            "adapter_path",
-            "primer_start",
-            "primer_end",
-            "append_start",
-            "append_end",
-            "read_transform"
-        ]
+def test_validate_headers_all_present_fastq():
+    all_fieldnames = REQUIRED_HEADERS + ["fastq_1", "fastq_2"] + OPTIONAL_HEADERS
 
     result = validate_headers(fieldnames = all_fieldnames, file_type = "fastq")
 
     assert result == REQUIRED_HEADERS + OPTIONAL_HEADERS
+
+
+def test_validate_headers_all_present_cram():
+    all_fieldnames = REQUIRED_HEADERS + ["cram_path"] + OPTIONAL_HEADERS
+
+    result = validate_headers(fieldnames = all_fieldnames, file_type = "cram")
+
+    assert result == REQUIRED_HEADERS + OPTIONAL_HEADERS
+
+
+def test_validate_headers_no_row_headers(capsys):
+    row_headers = []
+
+    with pytest.raises(SystemExit) as exc_info:
+        validate_headers(row_headers = row_headers, is_params = True)
+
+    assert exc_info.value.code == 1
+
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "No row to validate headers."
 
 
 def test_validate_headers_missing_required_headers():
@@ -63,8 +63,8 @@ def test_validate_headers_missing_optional_headers():
             "fastq_2",
             "oligo_library",
             "adapter_path",
-            "primer_start",
-            "primer_end",
+            "expt_forward_primer",
+            "expt_reverse_primer",
             "append_start",
             "append_end"
             ]
@@ -73,8 +73,10 @@ def test_validate_headers_missing_optional_headers():
         validate_headers(fieldnames = fieldnames, file_type = "fastq")
 
     # Check that the warning message is printed
+    missing_optional_headers = [header for header in OPTIONAL_HEADERS if header not in fieldnames]
+
     mock_print.assert_called_once_with(
-        "WARNING: samplesheet missing optional headers: group_id, read_transform"
+        f"WARNING: samplesheet missing optional headers: {', '.join(missing_optional_headers)}"
     )
 
     # Check at least once print statement was called
@@ -199,6 +201,104 @@ def test_check_sequencing_fields_cram_path_wrong_extension():
         "s1.bam"
     )
 
+@mock.patch("check_samplesheet.get_params")
+@mock.patch("check_samplesheet.validate_headers")
+@mock.patch("check_samplesheet.get_row")
+@mock.patch("check_samplesheet.validate_row")
+@mock.patch("check_samplesheet.display_validation_report")
+def test_validate_all_samples_no_messages(
+    mock_display_report,
+    mock_validate_row,
+    mock_get_row,
+    mock_validate_headers,
+    mock_get_params
+):
+    samplesheet_data = [
+        {"sample": "A"},
+        {"sample": "B"},
+    ]
+    params = {"foo": "bar"}
+
+    mock_get_params.return_value = SimpleNamespace()
+    mock_get_row.return_value = SimpleNamespace()
+    mock_validate_row.return_value = ([], [])
+
+    validate_all_samples(
+        samplesheet_data=samplesheet_data,
+        params=params,
+        file_type="fastq",
+    )
+
+    mock_get_params.assert_called_once_with(params)
+    assert mock_validate_headers.call_count == 2
+    assert mock_get_row.call_count == 2
+    assert mock_validate_row.call_count == 2
+    mock_display_report.assert_not_called()
+
+
+@mock.patch("check_samplesheet.get_params")
+@mock.patch("check_samplesheet.validate_headers")
+@mock.patch("check_samplesheet.get_row")
+@mock.patch("check_samplesheet.validate_row")
+@mock.patch("check_samplesheet.display_validation_report")
+def test_validate_all_samples_message(
+    mock_display_report,
+    mock_validate_row,
+    mock_get_row,
+    mock_validate_headers,
+    mock_get_params
+):
+    samplesheet_data = [
+        {"sample": "A"},
+        {"sample": "B"},
+    ]
+    params = {"foo": "bar"}
+    warning_message = "Some warning message"
+    error_message = "Some error message"
+
+    mock_get_params.return_value = SimpleNamespace()
+    mock_get_row.return_value = SimpleNamespace()
+    mock_validate_row.return_value = ([warning_message], [error_message])
+
+    validate_all_samples(
+        samplesheet_data=samplesheet_data,
+        params=params,
+        file_type="fastq",
+    )
+
+    mock_get_params.assert_called_once_with(params)
+    assert mock_validate_headers.call_count == 2
+    assert mock_get_row.call_count == 2
+    assert mock_validate_row.call_count == 2
+    mock_display_report.assert_called_once_with([warning_message, warning_message],
+                                                [error_message, error_message])
+
+
+@mock.patch("check_samplesheet.get_params")
+@mock.patch("check_samplesheet.get_row")
+@mock.patch("check_samplesheet.validate_row")
+def test_validate_all_samples_add_row_id(
+    mock_validate_row,
+    mock_get_row,
+    mock_get_params
+):
+    samplesheet_data = [
+        {"sample": "A"}
+    ]
+    params = {"foo": "bar"}
+
+    mock_get_params.return_value = SimpleNamespace()
+    mock_get_row.return_value = SimpleNamespace()
+    mock_validate_row.return_value = ([], [])
+
+    validate_all_samples(
+        samplesheet_data=samplesheet_data,
+        params=params,
+        file_type="fastq",
+    )
+
+    mock_get_row.assert_called_with({"sample": "A", "row_identifier": 2})
+
 
 def test_check_samplesheet_command_runs_as_expected_fastq(tmp_path):
     # Prepare a minimal valid samplesheet
@@ -207,9 +307,9 @@ def test_check_samplesheet_command_runs_as_expected_fastq(tmp_path):
     output_csv = tmp_path / "samplesheet.valid.csv"
 
     input_csv.write_text(
-        "sample,fastq_1,fastq_2,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform\n"
-        "SAMPLE_PE,SAMPLE_PE_RUN1_1.fastq.gz,,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
-        "SAMPLE_SE,SAMPLE_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
+        "sample,fastq_1,fastq_2,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform\n"
+        "SAMPLE_A_SE,SAMPLE_A_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
+        "SAMPLE_B_SE,SAMPLE_B_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
     )
     
     input_json.write_text(
@@ -235,9 +335,9 @@ def test_check_samplesheet_command_runs_as_expected_fastq(tmp_path):
     expected_output_csv = tmp_path / "expected_output.csv"
 
     expected_output_csv.write_text(
-        "sample,single_end,fastq_1,fastq_2,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform\n"
-        "SAMPLE_PE,1,SAMPLE_PE_RUN1_1.fastq.gz,,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
-        "SAMPLE_SE,1,SAMPLE_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
+        "sample,single_end,fastq_1,fastq_2,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform\n"
+        "SAMPLE_A_SE,1,SAMPLE_A_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
+        "SAMPLE_B_SE,1,SAMPLE_B_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
     )
 
     # Run the command to check the samplesheet
@@ -259,7 +359,7 @@ def test_check_samplesheet_command_runs_as_expected_fastq(tmp_path):
 
     with open(output_csv) as f:
         header = f.readline().strip()
-    expected_header = "sample,single_end,fastq_1,fastq_2,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform"
+    expected_header = "sample,single_end,fastq_1,fastq_2,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform"
     assert header == expected_header, "Header does not match expected output."
 
     # Check if input csv is same as expected output csv
@@ -277,7 +377,7 @@ def test_check_samplesheet_command_runs_as_expected_cram(tmp_path):
     output_csv = tmp_path / "samplesheet.valid.csv"
 
     input_csv.write_text(
-        "sample,cram_path,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform\n"
+        "sample,cram_path,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform\n"
         "SAMPLE_PE,SAMPLE_PE_RUN1_1.cram,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
         "SAMPLE_SE,SAMPLE_SE_RUN1_1.cram,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
     )
@@ -305,7 +405,7 @@ def test_check_samplesheet_command_runs_as_expected_cram(tmp_path):
     expected_output_csv = tmp_path / "expected_output.csv"
 
     expected_output_csv.write_text(
-        "sample,single_end,cram_path,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform\n"
+        "sample,single_end,cram_path,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform\n"
         "SAMPLE_PE,1,SAMPLE_PE_RUN1_1.cram,SAMPLE_PE_meta.csv,path/to/illumina_adaptors.fa,GAA,AAG,CTT,TTC,reverse_complement\n"
         "SAMPLE_SE,1,SAMPLE_SE_RUN1_1.cram,SAMPLE_SE_meta.csv,path/to/illumina_adaptors.fa,GTT,TAC,GTT,TAC,\n"
     )
@@ -329,7 +429,7 @@ def test_check_samplesheet_command_runs_as_expected_cram(tmp_path):
 
     with open(output_csv) as f:
         header = f.readline().strip()
-    expected_header = "sample,single_end,cram_path,oligo_library,adapter_path,primer_start,primer_end,append_start,append_end,read_transform"
+    expected_header = "sample,single_end,cram_path,oligo_library,adapter_path,expt_forward_primer,expt_reverse_primer,append_start,append_end,read_transform"
     assert header == expected_header, "Header does not match expected output."
 
     # Check if input csv is same as expected output csv
@@ -619,9 +719,9 @@ def test_check_samplesheet_extra_column(tmp_path):
     output_csv = tmp_path / "samplesheet.valid.csv"
 
     input_csv.write_text(
-        "sample,fastq_1,fastq_2,oligo_library,var1\n"
-        "SAMPLE_PE,SAMPLE_PE_RUN1_1.fastq.gz,,SAMPLE_PE_meta.csv,var1\n"
-        "SAMPLE_SE,SAMPLE_SE_RUN1_1.fastq.gz,,SAMPLE_SE_meta.csv,var1\n"
+        "sample,fastq_1,fastq_2,var1,oligo_library,var2\n"
+        "SAMPLE_1,SAMPLE_1_R1.fastq.gz,,var1,SAMPLE_1_meta.csv,var2\n"
+        "SAMPLE_2,SAMPLE_2_R1.fastq.gz,,var1,SAMPLE_2_meta.csv,var2\n"
     )
 
     input_json.write_text(
@@ -638,6 +738,12 @@ def test_check_samplesheet_extra_column(tmp_path):
         '}\n'
     )
 
+    expected_output = [
+        ["sample", "single_end", "fastq_1", "fastq_2", "oligo_library"],
+        ["SAMPLE_1", "1", "SAMPLE_1_R1.fastq.gz", "", "SAMPLE_1_meta.csv"],
+        ["SAMPLE_2", "1", "SAMPLE_2_R1.fastq.gz", "", "SAMPLE_2_meta.csv"]
+    ]
+
     # Run the command to check the samplesheet
     process_out = subprocess.run(
         [
@@ -651,11 +757,14 @@ def test_check_samplesheet_extra_column(tmp_path):
         text=True
     )
 
-    # Assert that sys.exit(1) was called
-    assert process_out.returncode == 1
+    assert process_out.returncode == 0, process_out.stderr
 
-    # Check error message in stdout or stderr
-    assert "ERROR: Check for invalid headers in the samplesheet: var1" in process_out.stderr
+    assert output_csv.exists()
+
+    with output_csv.open(newline="") as handle:
+        actual_output = list(csv.reader(handle))
+
+    assert actual_output == expected_output
 
 
 def test_check_samplesheet_extra_commas(tmp_path):
@@ -701,7 +810,11 @@ def test_check_samplesheet_extra_commas(tmp_path):
     assert process_out.returncode == 1
 
     # Check error message in stdout or stderr
-    assert "ERROR: Check in the samplesheet if there are any extra commas" in process_out.stderr
+    assert (
+        "ERROR: Unnamed headers found in samplesheet column(s): 2. "
+        "Check for extra commas before, between, or after headers."
+     in process_out.stderr
+    )
 
 
 def test_check_samplesheet_multiple_rows_same_sample(tmp_path):
