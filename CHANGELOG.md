@@ -3,21 +3,6 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 5.0.0 - [7th October 2026]
-
-### Added
-
-* Infer library orientation within QUANTS from experimental primers, FASTQ reads, and library metadata.
-* Support the `expt_forward_primer` and `expt_reverse_primer` samplesheet fields.
-* End-to-end coverage for inferred library orientations.
-* An iRODS file retrieval module that follows nf-core standards and supports multiple files per sample (not yet used by the pipeline).
-
-### Changed
-
-* Require Nextflow `>=25.10.4` and update nf-test coverage and documentation for supported container runtimes.
-* Use experimental primer fields in input validation, metadata, and end-to-end test manifests.
-* Allow extra, unused samplesheet columns without failing validation.
-
 ## 1.0.0.0 - [January 2022]
 
 Initial release of QUANTS, created with the [nf-core](https://nf-co.re/) template.
@@ -105,3 +90,18 @@ Initial release of QUANTS, created with the [nf-core](https://nf-co.re/) templat
 * CPU, memory, and time set per process
 * Updated html report produced when pipeline run
 * Overview QUANTS diagrams updated
+
+## 5.0.0 - [7th October 2026]
+
+### Added
+
+* Infer library orientation within QUANTS from experimental primers, FASTQ reads, and library metadata.
+* Support the `expt_forward_primer` and `expt_reverse_primer` samplesheet fields.
+* End-to-end coverage for inferred library orientations.
+* An iRODS file retrieval module that follows nf-core standards and supports multiple files per sample (not yet used by the pipeline).
+
+### Changed
+
+* Require Nextflow `>=25.10.4` and update nf-test coverage and documentation for supported container runtimes.
+* Use experimental primer fields in input validation, metadata, and end-to-end test manifests.
+* Allow extra, unused samplesheet columns without failing validation.
