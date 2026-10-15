@@ -105,3 +105,4 @@ Initial release of QUANTS, created with the [nf-core](https://nf-co.re/) templat
 * Require Nextflow `>=25.10.4` and update nf-test coverage and documentation for supported container runtimes.
 * Use experimental primer fields in input validation, metadata, and end-to-end test manifests.
 * Allow extra, unused samplesheet columns without failing validation.
+* Overview QUANTS diagrams updated.
