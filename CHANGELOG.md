@@ -91,7 +91,7 @@ Initial release of QUANTS, created with the [nf-core](https://nf-co.re/) templat
 * Updated html report produced when pipeline run
 * Overview QUANTS diagrams updated
 
-## 5.0.0 - [7th October 2026]
+## 5.0.0 - [15th October 2026]
 
 ### Added
 
