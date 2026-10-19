@@ -41,6 +41,8 @@ The samplesheet can contain any columns, but the columns with headers as below a
 
 A sample can appear on several rows, but all its columns (excluding `fastq_1`, `fastq_2`, `cram_path`) must be identical across those rows.
 
+> ! While a sample can appear on multiple rows, reads from those rows aren’t being merged yet. As such, runs with samples over multiple rows not supported until the `reads_fetch_convert_merge` subworkflow is developed and wired into QUANTS.
+
 | Column | Description | Optional/Required |
 | --- | --- | --- |
 | `sample` | Custom sample name. Spaces in sample names are automatically converted to underscores (`_`). | Required |
