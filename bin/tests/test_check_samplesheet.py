@@ -183,6 +183,22 @@ def test_check_sequencing_fields_fastq_path_with_spaces():
     )
 
 
+def test_check_sequencing_fields_fastq_irods_paths():
+    line = {
+        "fastq_1": "irods:///seq/illumina/runs/s1_1.fastq.gz",
+        "fastq_2": "irods:///seq/illumina/runs/s1_2.fastq.gz"
+    }
+
+    with mock.patch("check_samplesheet.print_error") as mock_error:
+        check_sequencing_fields(
+            input_type="fastq",
+            line=line,
+            single_end=False
+        )
+
+    mock_error.assert_not_called()
+
+
 def test_check_sequencing_fields_cram_path_wrong_extension():
     line = {
         "cram_path": "s1.bam"
