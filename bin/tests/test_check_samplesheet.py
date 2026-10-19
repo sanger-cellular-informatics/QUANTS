@@ -183,6 +183,22 @@ def test_check_sequencing_fields_fastq_path_with_spaces():
     )
 
 
+def test_check_sequencing_fields_fastq_irods_paths():
+    line = {
+        "fastq_1": "irods:///seq/illumina/runs/s1_1.fastq.gz",
+        "fastq_2": "irods:///seq/illumina/runs/s1_2.fastq.gz"
+    }
+
+    with mock.patch("check_samplesheet.print_error") as mock_error:
+        check_sequencing_fields(
+            input_type="fastq",
+            line=line,
+            single_end=False
+        )
+
+    mock_error.assert_not_called()
+
+
 def test_check_sequencing_fields_cram_path_wrong_extension():
     line = {
         "cram_path": "s1.bam"
@@ -676,7 +692,7 @@ def test_check_samplesheet_group_id_missing_some(tmp_path):
     input_csv.write_text(
         "group_id,sample,fastq_1,fastq_2\n"
         "grp1,s1,s1.fq.gz,\n"
-        ",s1,s2.fq.gz,\n"
+        ",s2,s2.fq.gz,\n"
     )
 
     input_json.write_text(
@@ -826,7 +842,7 @@ def test_check_samplesheet_multiple_rows_same_sample(tmp_path):
     input_csv.write_text(
         "sample,fastq_1,fastq_2,oligo_library\n"
         "SAMPLE_PE,SAMPLE_PE_RUN1_1.fastq.gz,,SAMPLE_PE_meta_1.csv\n"
-        "SAMPLE_PE,SAMPLE_PE_RUN1_2.fastq.gz,,SAMPLE_PE_meta_2.csv\n"
+        "SAMPLE_PE,SAMPLE_PE_RUN1_2.fastq.gz,,SAMPLE_PE_meta_1.csv\n"
         "SAMPLE_SE,SAMPLE_PE_RUN1.fastq.gz,,SAMPLE_PE_meta_3.csv\n"
 
     )
@@ -850,7 +866,7 @@ def test_check_samplesheet_multiple_rows_same_sample(tmp_path):
     expected_output_csv.write_text(
        "sample,single_end,fastq_1,fastq_2,oligo_library\n"
         "SAMPLE_PE,1,SAMPLE_PE_RUN1_1.fastq.gz,,SAMPLE_PE_meta_1.csv\n"
-        "SAMPLE_PE,1,SAMPLE_PE_RUN1_2.fastq.gz,,SAMPLE_PE_meta_2.csv\n"
+        "SAMPLE_PE,1,SAMPLE_PE_RUN1_2.fastq.gz,,SAMPLE_PE_meta_1.csv\n"
         "SAMPLE_SE,1,SAMPLE_PE_RUN1.fastq.gz,,SAMPLE_PE_meta_3.csv\n"
     )
 
@@ -927,5 +943,175 @@ def test_check_samplesheet_wrong_file_extension(tmp_path):
     assert process_out.returncode == 1
 
     # Check error message in stdout or stderr
-
     assert "FASTQ file extension can only be .fastq.gz or .fq.gz" in process_out.stdout
+
+
+def test_check_samplesheet_same_sample_consistent_metadata(tmp_path):
+    # Prepare a samplesheet with multiple runs of a sample sharing the same metadata
+    input_csv = tmp_path / "samplesheet.csv"
+    input_json = tmp_path / "params.json"
+    output_csv = tmp_path / "samplesheet.valid.csv"
+
+    input_csv.write_text(
+        "sample,fastq_1,fastq_2,oligo_library,append_start,append_end\n"
+        "SAMPLE_1,SAMPLE_1_RUN1.fastq.gz,,SAMPLE_1_meta.csv,CTT,TTC\n"
+        "SAMPLE_1,SAMPLE_1_RUN2.fastq.gz,,SAMPLE_1_meta.csv,CTT,TTC\n"
+        "SAMPLE_2,SAMPLE_2_RUN1.fastq.gz,,SAMPLE_2_meta.csv,GTT,TAC\n"
+    )
+
+    input_json.write_text(
+        '{\n'
+        '"single_end": true,\n'
+        '"input_type": "fastq",\n'
+        '"raw_sequencing_qc": true,\n'
+        '"adapter_trimming": "",\n'
+        '"primer_trimming": "",\n'
+        '"read_modification": true,\n'
+        '"transform_library": false,\n'
+        '"quantification": "pyquest",\n'
+        '"downsampling": false\n'
+        '}\n'
+    )
+
+    expected_output_csv = tmp_path / "expected_output.csv"
+
+    expected_output_csv.write_text(
+        "sample,single_end,fastq_1,fastq_2,oligo_library,append_start,append_end\n"
+        "SAMPLE_1,1,SAMPLE_1_RUN1.fastq.gz,,SAMPLE_1_meta.csv,CTT,TTC\n"
+        "SAMPLE_1,1,SAMPLE_1_RUN2.fastq.gz,,SAMPLE_1_meta.csv,CTT,TTC\n"
+        "SAMPLE_2,1,SAMPLE_2_RUN1.fastq.gz,,SAMPLE_2_meta.csv,GTT,TAC\n"
+    )
+
+    # Run the command to check the samplesheet
+    _ = subprocess.run(
+        [
+            "python3",
+            "bin/check_samplesheet.py",
+            str(input_csv),
+            str(input_json),
+            str(output_csv)
+        ],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+
+    # Check that the output file exists
+    assert output_csv.exists()
+
+    # Check if expected output csv is same as output csv
+    with open(expected_output_csv, encoding="utf-8") as f_in, open(output_csv) as f_out:
+        expected_output_csv = f_in.read().strip()
+        output_content = f_out.read().strip()
+
+    assert expected_output_csv == output_content, "Input and output samplesheet contents do not match."
+
+
+def test_check_samplesheet_same_sample_inconsistent_metadata(tmp_path):
+    # Prepare a samplesheet with multiple runs of a sample with differing metadata
+    input_csv = tmp_path / "samplesheet.csv"
+    input_json = tmp_path / "params.json"
+    output_csv = tmp_path / "samplesheet.valid.csv"
+
+    input_csv.write_text(
+        "sample,fastq_1,fastq_2,oligo_library,append_start,append_end\n"
+        "SAMPLE_1,SAMPLE_1_RUN1.fastq.gz,,SAMPLE_1_meta.csv,CTT,TTC\n"
+        "SAMPLE_1,SAMPLE_1_RUN2.fastq.gz,,SAMPLE_1_meta_2.csv,CTT,GGG\n"
+        "SAMPLE_2,SAMPLE_2_RUN1.fastq.gz,,SAMPLE_2_meta.csv,GTT,TAC\n"
+    )
+
+    input_json.write_text(
+        '{\n'
+        '"single_end": true,\n'
+        '"input_type": "fastq",\n'
+        '"raw_sequencing_qc": true,\n'
+        '"adapter_trimming": "",\n'
+        '"primer_trimming": "",\n'
+        '"read_modification": true,\n'
+        '"transform_library": false,\n'
+        '"quantification": "pyquest",\n'
+        '"downsampling": false\n'
+        '}\n'
+    )
+
+    # Run the command to check the samplesheet
+    process_out = subprocess.run(
+        [
+            "python3",
+            "bin/check_samplesheet.py",
+            str(input_csv),
+            str(input_json),
+            str(output_csv)
+        ],
+        capture_output=True,
+        text=True,
+        check=False
+    )
+
+    # Assert that sys.exit(1) was called
+    assert process_out.returncode == 1
+
+    # Check error message in stdout lists the differing columns and the sample
+    assert "Rows for the same sample must have identical metadata" in process_out.stdout
+    assert "differs in: oligo_library, append_end" in process_out.stdout
+    assert "Sample: 'SAMPLE_1'" in process_out.stdout
+
+
+def test_check_samplesheet_tsv_input(tmp_path):
+    # Prepare a minimal valid tsv samplesheet
+    input_tsv = tmp_path / "samplesheet.tsv"
+    input_json = tmp_path / "params.json"
+    output_csv = tmp_path / "samplesheet.valid.csv"
+
+    input_tsv.write_text(
+        "sample\tfastq_1\tfastq_2\toligo_library\n"
+        "SAMPLE_1\tSAMPLE_1_RUN1_1.fastq.gz\t\tSAMPLE_1_meta.csv\n"
+        "SAMPLE_2\tSAMPLE_2_RUN1_1.fastq.gz\t\tSAMPLE_2_meta.csv\n"
+    )
+
+    input_json.write_text(
+        '{\n'
+        '"single_end": true,\n'
+        '"input_type": "fastq",\n'
+        '"raw_sequencing_qc": true,\n'
+        '"adapter_trimming": "",\n'
+        '"primer_trimming": "",\n'
+        '"read_modification": false,\n'
+        '"transform_library": false,\n'
+        '"quantification": "pyquest",\n'
+        '"downsampling": false\n'
+        '}\n'
+    )
+
+    expected_output_csv = tmp_path / "expected_output.csv"
+
+    # Output samplesheet is always comma-separated
+    expected_output_csv.write_text(
+        "sample,single_end,fastq_1,fastq_2,oligo_library\n"
+        "SAMPLE_1,1,SAMPLE_1_RUN1_1.fastq.gz,,SAMPLE_1_meta.csv\n"
+        "SAMPLE_2,1,SAMPLE_2_RUN1_1.fastq.gz,,SAMPLE_2_meta.csv\n"
+    )
+
+    # Run the command to check the samplesheet
+    _ = subprocess.run(
+        [
+            "python3",
+            "bin/check_samplesheet.py",
+            str(input_tsv),
+            str(input_json),
+            str(output_csv)
+        ],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+
+    # Check that the output file exists
+    assert output_csv.exists()
+
+    # Check if expected output csv is same as output csv
+    with open(expected_output_csv, encoding="utf-8") as f_in, open(output_csv, encoding="utf-8") as f_out:
+        expected_output_csv = f_in.read().strip()
+        output_content = f_out.read().strip()
+
+    assert expected_output_csv == output_content, "Input and output samplesheet contents do not match."

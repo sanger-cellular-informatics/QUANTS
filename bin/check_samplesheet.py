@@ -217,9 +217,11 @@ def check_samplesheet(file_in, params_in, file_out):
         params = json.load(f)
 
     sample_mapping_dict = {}
+    sample_meta = {}
 
+    delimiter = "\t" if file_in.lower().endswith(".tsv") else ","
     with open(file_in, "r") as f_in:
-        f_reads = csv.DictReader(f_in)
+        f_reads = csv.DictReader(f_in, delimiter=delimiter)
 
         # Check headers
         f_reads.fieldnames = [
@@ -290,6 +292,19 @@ def check_samplesheet(file_in, params_in, file_out):
                                     line = line,
                                     single_end = single_end)
 
+            # Check metadata is consistent across rows of the same sample
+            meta = {h: line.get(h) for h in OPTIONAL_HEADERS if h in valid_headers}
+            if sample not in sample_meta:
+                sample_meta[sample] = meta
+            else:
+                diff_cols = [h for h in meta if meta[h] != sample_meta[sample][h]]
+                if diff_cols:
+                    print_error(
+                        f"Rows for the same sample must have identical metadata (differs in: {', '.join(diff_cols)})!",
+                        "Sample",
+                        sample
+                    )
+
             # Get sample info
             # Get rest of the info from file read line and skip sample to avoid duplication in the file out.
             # Example: [fastq_1,fastq_2,oligo_library,adapter_path,LibAmpF,LibAmpR,read_transform]
@@ -297,7 +312,8 @@ def check_samplesheet(file_in, params_in, file_out):
             rest_info = [line.get(h) for h in valid_headers if h != "sample"]
             sample_info = [single_end, *rest_info]
 
-            # Create sample mapping dictionary = { sample: [ single_end, fastq_1, fastq_2 ] } or { sample: [ single_end, cram_path ] }
+            # Create sample mapping dictionary = { sample: [ single_end, fastq_1, fastq_2 ] } or
+            # { sample: [ single_end, cram_path ] }
             if sample not in sample_mapping_dict:
                 sample_mapping_dict[sample] = [sample_info]
             else:

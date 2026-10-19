@@ -3,6 +3,13 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+* Samplesheet can now be supplied as TSV as well as CSV
+* Samplesheet checker now errors if rows for the same sample have inconsistent metadata
+
 ## 1.0.0.0 - [January 2022]
 
 Initial release of QUANTS, created with the [nf-core](https://nf-co.re/) template.

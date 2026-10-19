@@ -10,7 +10,7 @@ Use the `input` parameter to specify its location.
 --input '[path to samplesheet file]'
 ```
 
-The samplesheet has to be a **comma-separated** file. 
+The samplesheet has to be a **comma- or tab-separated** file. 
 If working with FASTQ files, you will need a minimum of three columns with headers of `sample,fastq_1,fastq_2`. If working with CRAM files, you will need a minimum of two columns with headers of `sample,cram_path`. The samplesheet can also contain sample-specific parameters (see example below).
 
 ### Minimum samplesheet example
@@ -38,6 +38,10 @@ S04_D7_R2,S04_D7_R2_merged.cram
 ### Recognised samplesheet fields
 
 The samplesheet can contain any columns, but the columns with headers as below are recognised by QUANTS and used as described in the table below.
+
+A sample can appear on several rows, but all its columns (excluding `fastq_1`, `fastq_2`, `cram_path`) must be identical across those rows.
+
+> ! While a sample can appear on multiple rows, reads from those rows aren’t being merged yet. As such, runs with samples over multiple rows not supported until the `reads_fetch_convert_merge` subworkflow is developed and wired into QUANTS.
 
 | Column | Description | Optional/Required |
 | --- | --- | --- |
